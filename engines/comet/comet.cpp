@@ -115,7 +115,7 @@ void CometEngine::timerProc60() {
 		}
 	}
 }
-int8 CometEngine::addTimedProc(Common::Functor0<void>* func) {
+int8 CometEngine::addTimedProc(Common::Functor0<void> *func) {
 	for (uint8 i = 0; i < 6; i++) {
 		if (timedprocs[i] == nullptr) {
 			timedprocs[i] = func;
@@ -142,61 +142,15 @@ CometEngine::~CometEngine() {
 
 	delete _image;
 	//	delete _console;	// this is automatically done by the engine
-	if (_archMgr != nullptr) {
-		delete _archMgr;
-		_archMgr = nullptr;
-	}
-	if (_audioMgr != nullptr) {
-		delete _audioMgr;
-		_audioMgr = nullptr;
-	}
-	if (_gmMgr != nullptr) {
-		delete _gmMgr;
-		_gmMgr = nullptr;
-	}
-	if (_gMgr != nullptr) {
-		delete _gMgr;
-		_gMgr = nullptr;
-	}
-	if (_scMgr != nullptr) {
-		delete _scMgr;
-		_scMgr = nullptr;
-	}
-	if (_txtMgr != nullptr) {
-		delete _txtMgr;
-		_txtMgr = nullptr;
-	}
-	if (_spMgr != nullptr) {
-		delete _spMgr;
-		_spMgr = nullptr;
-	}
+	delete _archMgr;
+	delete _audioMgr;
+	delete _gmMgr;
+	delete _gMgr;
+	delete _scMgr;
+	delete _txtMgr;
+	delete _spMgr;
 }
-/*
-static const byte MOUSECURSOR_SCI[] = {
-	1,1,0,0,0,0,0,0,0,0,0,
-	1,2,1,0,0,0,0,0,0,0,0,
-	1,2,2,1,0,0,0,0,0,0,0,
-	1,2,2,2,1,0,0,0,0,0,0,
-	1,2,2,2,2,1,0,0,0,0,0,
-	1,2,2,2,2,2,1,0,0,0,0,
-	1,2,2,2,2,2,2,1,0,0,0,
-	1,2,2,2,2,2,2,2,1,0,0,
-	1,2,2,2,2,2,2,2,2,1,0,
-	1,2,2,2,2,2,2,2,2,2,1,
-	1,2,2,2,2,2,1,0,0,0,0,
-	1,2,1,0,1,2,2,1,0,0,0,
-	1,1,0,0,1,2,2,1,0,0,0,
-	0,0,0,0,0,1,2,2,1,0,0,
-	0,0,0,0,0,1,2,2,1,0,0,
-	0,0,0,0,0,0,1,2,2,1,0
-};
 
-static const byte cursorPalette[] = {
-	0, 0, 0,           // Black / Transparent
-	0x80, 0x80, 0x80,  // Gray
-	0xff, 0xff, 0xff   // White
-};
-*/
 void CometEngine::initManagers() {
 	_archMgr = new ArchivesManager(this);
 	_gmMgr = new GameManager(this);
@@ -226,15 +180,6 @@ Common::Error CometEngine::run() {
 	_console = new Console();
 	setDebugger(_console);
 	initManagers();
-	//	_audioMgr->playMusicSubfile(1);
-	//	_audioMgr->playDigiSubfile(9,3);
-	/*
-	_gmMgr->updateFontDataAndColor(0x5f);
-	char *tmp = _gMgr->lockMainSurface();
-	_txtMgr->drawString(100, 100, tmp, "Solzizz");
-	_gMgr->unlockMainSurface();
-	_system->updateScreen();
-*/
 
 	while (!_isEscPressed) {
 		_gmMgr->updateInputStatus();
@@ -263,13 +208,14 @@ Common::Error CometEngine::run() {
 	if (isQuitRequested()) {
 		return Common::kNoError;
 	}
-	/*
-	bool protectionResult=_gmMgr->copyProtection();
-	if (isQuitRequested()) {
-		return Common::kNoError;
+	
+	if (!isCD()) {
+
+		bool protectionResult = _gmMgr->copyProtection();
+		if (isQuitRequested() || (!protectionResult)) {
+			return Common::kNoError;
+		}
 	}
-//	warning("After Protection");
-	*/
 	_gmMgr->waitForNoInput();
 	if (!isCD()) {
 
@@ -343,8 +289,6 @@ Common::Error CometEngine::run() {
 		}
 	}
 	return Common::kNoError;
-
-
 }
 void CometEngine::setScummVMQuit() {
 	_isScummVMQuit = true;
