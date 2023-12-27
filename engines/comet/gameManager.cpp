@@ -26,7 +26,6 @@
 #include "common/savefile.h"
 #include "common\serializer.h"
 #include "engines/advancedDetector.h"
-#include "common/events.h"
 
 #define _COMET_CTRL 0x04
 #define _COMET_ALT 0x01
@@ -69,8 +68,7 @@ GameManager::GameManager(CometEngine *vm) : _vm(vm),
 											_copyProtectionTitleSentence(nullptr), _copyProtectionInstructionsSentence(nullptr), _copyProtectionsConstellationsData(), _copyProtectionStarsGraphics(nullptr),
 											_copyProtectionRightConstellationRow(0), _copyProtectionRightConstellationColumn(0), _copyProtectionDisplayedConstellationsData(),
 											_copyProtectionNumColumns(11), _copyProtectionNumRows(16),
-											_zoomRestored(false), skullTilesState(), skullCursorX(0), skullCursorY(0), skullPuzzleData(nullptr), forceLoading(0), defaultLanguage(0)
-{
+											_zoomRestored(false), skullTilesState(), skullCursorX(0), skullCursorY(0), skullPuzzleData(nullptr), forceLoading(0), defaultLanguage(0) {
 	if (_vm->isComet()) {
 		if (_vm->isCD()) {
 			_startPakNumber = 9;
@@ -148,7 +146,6 @@ GameManager::GameManager(CometEngine *vm) : _vm(vm),
 	_facingDirChangeMatrix[kLeft][kRight] = kDown;
 	_facingDirChangeMatrix[kLeft][kDown] = kDown;
 	_facingDirChangeMatrix[kLeft][kLeft] = kLeft;
-
 
 	memset(_saveFilesDescription, 0, 10 * 30);
 }
@@ -291,29 +288,27 @@ uint32 GameManager::getKeySpecialFunction(Common::KeyCode code) {
 	return 0;
 }
 void GameManager::loadResPak() {
-	if(!_vm->isCD()){
+	if (!_vm->isCD()) {
 		_resPakData = _vm->_archMgr->allocateAndGetFile("RES.PAK", 0);
 		_fontData = _resPakData + READ_LE_UINT32(_resPakData);
 
 		this->_vm->_gMgr->setBasicResources(_resPakData + READ_LE_UINT32(_resPakData + 4), _resPakData + READ_LE_UINT32(_resPakData + 8), _resPakData + READ_LE_UINT32(_resPakData + 12), _resPakData + READ_LE_UINT32(_resPakData + 16));
 		this->_vm->_gMgr->initializePalette(_resPakData + READ_LE_UINT32(_resPakData + 20), _resPakData + READ_LE_UINT32(_resPakData + 24));
-	}
-	else {
-		_fontData=_vm->_archMgr->allocateAndGetFile("RES.PAK", 0);
+	} else {
+		_fontData = _vm->_archMgr->allocateAndGetFile("RES.PAK", 0);
 		this->_vm->_gMgr->setBasicResources(
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 1), //speech box
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 2), //parker walk
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 3), //icons
-			_vm->_archMgr->allocateAndGetFile("RES.PAK", 4) //objects
+			_vm->_archMgr->allocateAndGetFile("RES.PAK", 4)  //objects
 		);
 		updateFontDataAndColor(0);
 		this->_vm->_gMgr->initializePalette(
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 5), //main palette
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 6), //flashback palette
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 7), //cd intro palette
-			_vm->_archMgr->allocateAndGetFile("RES.PAK", 8) //another palette
-			);
-
+			_vm->_archMgr->allocateAndGetFile("RES.PAK", 8)  //another palette
+		);
 	}
 	initAllResources();
 	setPakNumber(_startPakNumber, _startRoom);
@@ -791,8 +786,7 @@ void GameManager::gameFrame() { //ok
 		_vm->_gMgr->drawActorsAndStageElements();
 		if (!_vm->isCD()) {
 			_vm->_txtMgr->handleOnScreenText();
-		}
-		else {
+		} else {
 			if (_vm->_gameState.speechOptions == 0) {
 				_vm->_txtMgr->handleOnScreenText();
 			}
@@ -1192,44 +1186,57 @@ void GameManager::handlePortraitAnimation(Actor *actor) {
 	//bug in the original game: it didn't check if portrait's resourceIdx is -1
 	//in the original game it read data from random memory and everything happened to work fine,
 	//but we can't do it here ;)
-	if (actor->resourceIdx < 0) {
-		return;
-	}
-	if (actor->fixedAnimationFrame == -1) {
-		char *animPtr = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data) + 2;
-		uint16 factor = READ_LE_UINT16(animPtr + ((actor->frameToDraw * 8) + 2));
-		uint16 decodeType = factor >> 14;
-		factor &= 0x3fff;
-		if (decodeType == 1) {
-			if (factor < 1) {
-				factor = 1;
-			}
-			if (actor->currentAnimationFactor > factor - 1) {
-				actor->currentAnimationFactor = 0;
+	if (actor->resourceIdx >= 0) {
+		if (actor->fixedAnimationFrame == -1) {
+			char *animPtr = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data) + 2;
+			uint16 factor = READ_LE_UINT16(animPtr + ((actor->frameToDraw * 8) + 2));
+			uint16 decodeType = factor >> 14;
+			factor &= 0x3fff;
+			if (decodeType == 1) {
+				if (factor < 1) {
+					factor = 1;
+				}
+				if (actor->currentAnimationFactor > factor - 1) {
+					actor->currentAnimationFactor = 0;
+					actor->frameToDraw++;
+				}
+			} else {
 				actor->frameToDraw++;
 			}
-		} else {
-			actor->frameToDraw++;
-		}
-		if (actor->frameToDraw >= actor->numFrames) {
-			actor->frameToDraw = 0;
-			if (actor->animationIdx < 4) {
-				if (_portratiAnimationCounter == 0) {
-					_portraitRandomAnimation = _rnd.getRandomNumber(3);
-					if (_portraitRandomAnimation == 0) {
-						_portraitRandomAnimation = 1;
+			if (actor->frameToDraw >= actor->numFrames) {
+				actor->frameToDraw = 0;
+				if (actor->animationIdx < 4) {
+					if (_portratiAnimationCounter == 0) {
+						if (_vm->isCD() && _vm->_gameState.speechOptions != 0) {
+							_portraitRandomAnimation = _rnd.getRandomNumber(3);
+							if (!_vm->_spMgr->isSpeechActive()) {
+								_portraitRandomAnimation = 0;
+							}
+
+						} else {
+							_portraitRandomAnimation = _rnd.getRandomNumber(3);
+							if (_portraitRandomAnimation == 0) {
+								_portraitRandomAnimation = 1;
+							}
+						}
+					} else {
+						_portratiAnimationCounter++;
+						if (_vm->isCD() && (_vm->_gameState.speechOptions == 1 || _vm->_gameState.speechOptions == 2)) {
+							if (_portratiAnimationCounter == 1) {
+								_portratiAnimationCounter = 0;
+							}
+						} else {
+							if (_portratiAnimationCounter == 10) {
+								_portratiAnimationCounter = 0;
+							}
+						}
 					}
-				} else {
-					_portratiAnimationCounter++;
-					if (_portratiAnimationCounter == 10) {
-						_portratiAnimationCounter = 0;
-					}
+					actorPrepareAnimation(actor, _portraitRandomAnimation);
 				}
-				actorPrepareAnimation(actor, _portraitRandomAnimation);
 			}
+		} else {
+			actor->currentAnimationFactor = 0;
 		}
-	} else {
-		actor->currentAnimationFactor = 0;
 	}
 	if (_vm->isCD()) {
 		_vm->_gMgr->callCapFPS();
@@ -2384,7 +2391,7 @@ uint8 GameManager::handleDiary() {
 	_numMenusOnScreen++;
 	_vm->_gMgr->diaryFade(false, currPage, maxPage);
 	if (_vm->isCD()) {
-		realChapter=_vm->_gameState.textChapterID;
+		realChapter = _vm->_gameState.textChapterID;
 		_vm->_gameState.textChapterID = 7;
 		_vm->_spMgr->openNARarchive(7);
 	}
@@ -2418,7 +2425,7 @@ uint8 GameManager::handleDiary() {
 	}
 	waitForNoInput();
 	if (_vm->isCD()) {
-		
+
 		_vm->_gameState.textChapterID = realChapter;
 		_vm->_spMgr->openNARarchive(realChapter);
 	}
