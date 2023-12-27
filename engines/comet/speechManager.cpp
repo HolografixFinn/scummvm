@@ -32,25 +32,26 @@ SpeechManager::SpeechManager(CometEngine *vm, bool isCD = false) : _vm(vm), _isC
 		_speechBuffer = new uint8[20 * 1024 * 16]; //in EMS that's 20 pages, each one 16K
 		memset(_speechBuffer, 0x80, 20 * 1024 * 16);
 		_vocData = _speechBuffer;
-
+		_lipSyncTimerCurrValue = _lipSyncTimerRestartValue;
 		_vm->addTimedProc(new Common::Functor0Mem<void, SpeechManager>(this, &SpeechManager::lipSync_proc));
 	}
 }
 void SpeechManager::lipSync_proc() {
 	uint32 diff = 0;
-	if (_lipSyncTimerRestartValue >= 0x10000) {
-		_lipSyncTimerRestartValue -= 0x10000;
+	// _lipSyncTimerCurrValue  is a 16.16 fixed point divider used to run this proc at 18.222Hz insted of 60Hz
+	if (_lipSyncTimerCurrValue >= 0x10000) {
+		_lipSyncTimerCurrValue -= 0x10000;
 	} else {
-		diff = 0x10000 - _lipSyncTimerRestartValue;
-		_lipSyncTimerRestartValue = 0;
+		diff = 0x10000 - _lipSyncTimerCurrValue;
+		_lipSyncTimerCurrValue = 0;
 	}
-	if (_lipSyncTimerRestartValue == 0) {
-		_lipSyncCounter = _lipSyncTimerRestartValue - diff;
+	if (_lipSyncTimerCurrValue == 0) {
+		_lipSyncTimerCurrValue = _lipSyncTimerRestartValue - diff;
 		{
 			Common::StackLock lock(_lipSyncMutex);
 			_lipSyncCounter += 0x366;
-			if (_lipSyncCounter > 0x8000) {
-				_lipSyncCounter -= 0x8000;
+			if (_lipSyncCounter > 0x28000) {
+				_lipSyncCounter -= 0x28000;
 			}
 		}
 	}
