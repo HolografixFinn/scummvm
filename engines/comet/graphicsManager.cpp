@@ -71,7 +71,6 @@ GraphicsManager::GraphicsManager(CometEngine *vm) : _vm(vm), _currFPS(0), _FPS(0
 													_speechBoxGraphics(nullptr), _parkerWalkAnimation(nullptr), _stageAnims(nullptr),
 													_type3Resource_unused(nullptr), _iconsGraphics(nullptr), _objectsGraphics(nullptr),
 													mainGamePalette(nullptr), sepiaPalette(nullptr), cdintroPalette(nullptr), cd2Palette(nullptr),
-													_cursorGraphics(nullptr), _cursor0(nullptr), _cursor1(nullptr), _cursor2(nullptr), _cursor3(nullptr), _cursor4(nullptr), _cursor5(nullptr), _cursor6(nullptr),
 													normalPalette(nullptr), tmpPalette(nullptr), //_displayList(), //_numElementsInDisplayList(0),
 													_tmpBuffer(nullptr), _coordinates(),
 													_decodingFlags_v1(0), _decodingFlags_v2(0), _isByteParams_v1(false), _isByteParams_v2(false), _isNegParam1_v1(false), _isNegParam2_v1(false), _isNegParam1_v2(false), _isNegParam2_v2(false),
@@ -95,7 +94,7 @@ GraphicsManager::GraphicsManager(CometEngine *vm) : _vm(vm), _currFPS(0), _FPS(0
 	_hfLastSecond = _hfLast;
 	_hfFps = 0;
 	if (!_vm->isCD()) {
-//		_hfMaxFps = 50;
+		//		_hfMaxFps = 50;
 		capFPS = &GraphicsManager::capFPS_floppy;
 		_vm->addTimedProc(new Common::Functor0Mem<void, GraphicsManager>(this, &GraphicsManager::onFrame));
 	} else {
@@ -150,67 +149,20 @@ void GraphicsManager::init() {
 }
 void GraphicsManager::uninit() {
 	_vm->_system->getTimerManager()->removeTimerProc(GraphicsManager::onFrameTimer);
-	if (this->_videoBackbuffer != nullptr) {
-		delete[] this->_videoBackbuffer;
-		this->_videoBackbuffer = nullptr;
-	}
-	if (this->_backgroundBuffer != nullptr) {
-		delete[] this->_backgroundBuffer;
-		this->_backgroundBuffer = nullptr;
-	}
-	if (this->normalPalette != nullptr) {
-		delete[] this->normalPalette;
-		this->normalPalette = nullptr;
-	}
-	if (this->tmpPalette != nullptr) {
-		delete[] this->tmpPalette;
-		this->tmpPalette = nullptr;
-	}
+	delete[] this->_videoBackbuffer;
+	delete[] this->_backgroundBuffer;
+	delete[] this->normalPalette;
+	delete[] this->tmpPalette;
 	if (_vm->isCD()) {
 
-		if (this->mainGamePalette != nullptr) {
-			delete[] this->mainGamePalette;
-			this->mainGamePalette = nullptr;
-		}
-		if (this->sepiaPalette != nullptr) {
-			delete[] this->sepiaPalette;
-			this->sepiaPalette = nullptr;
-		}
-		if (this->cdintroPalette != nullptr) {
-			delete[] this->cdintroPalette;
-			this->cdintroPalette = nullptr;
-		}
-		if (this->cd2Palette != nullptr) {
-			delete[] this->cd2Palette;
-			this->cd2Palette = nullptr;
-		}
-		if (this->_speechBoxGraphics != nullptr) {
-			delete[] this->_speechBoxGraphics;
-			this->_speechBoxGraphics = nullptr;
-		}
-		if (this->_parkerWalkAnimation != nullptr) {
-			delete[] this->_parkerWalkAnimation;
-			this->_parkerWalkAnimation = nullptr;
-		}
-		if (this->_iconsGraphics != nullptr) {
-			delete[] this->_iconsGraphics;
-			this->_iconsGraphics = nullptr;
-		}
-		if (this->_objectsGraphics != nullptr) {
-			delete[] this->_objectsGraphics;
-			this->_objectsGraphics = nullptr;
-		}
-		if (this->_cursorGraphics != nullptr) {
-			delete[] this->_cursorGraphics;
-			this->_cursorGraphics = nullptr;
-		}
-		_cursor0 = nullptr;
-		_cursor1 = nullptr;
-		_cursor2 = nullptr;
-		_cursor3 = nullptr;
-		_cursor4 = nullptr;
-		_cursor5 = nullptr;
-		_cursor6 = nullptr;
+		delete[] this->mainGamePalette;
+		delete[] this->sepiaPalette;
+		delete[] this->cdintroPalette;
+		delete[] this->cd2Palette;
+		delete[] this->_speechBoxGraphics;
+		delete[] this->_parkerWalkAnimation;
+		delete[] this->_iconsGraphics;
+		delete[] this->_objectsGraphics;
 	}
 }
 void GraphicsManager::onFrameTimer(void *ref) {
@@ -325,21 +277,11 @@ void GraphicsManager::initializePalette(char *_mainPalette, char *_flahsbackPale
 	memcpy(tmpPalette, mainGamePalette, 0x300); // TODO it isn't there?
 	uploadPalette(mainGamePalette);
 }
-void GraphicsManager::setBasicResources(char *speechbox, char *mainWalk, char *icons, char *objects, char *cursors) {
+void GraphicsManager::setBasicResources(char *speechbox, char *mainWalk, char *icons, char *objects) {
 	_speechBoxGraphics = speechbox;
 	_parkerWalkAnimation = mainWalk;
 	_iconsGraphics = icons;
 	_objectsGraphics = objects;
-	_cursorGraphics = cursors;
-	if (_cursorGraphics != nullptr) {
-		_cursor0 = getGraphicsData(1, 0, _cursorGraphics);
-		_cursor1 = getGraphicsData(1, 1, _cursorGraphics);
-		_cursor2 = getGraphicsData(1, 2, _cursorGraphics);
-		_cursor3 = getGraphicsData(1, 3, _cursorGraphics);
-		_cursor4 = getGraphicsData(1, 4, _cursorGraphics);
-		_cursor5 = getGraphicsData(1, 5, _cursorGraphics);
-		_cursor6 = getGraphicsData(1, 6, _cursorGraphics);
-	}
 }
 
 void GraphicsManager::uploadPalette(char *palette) {
@@ -347,7 +289,7 @@ void GraphicsManager::uploadPalette(char *palette) {
 	char _tmpPalette[0x300];
 	memcpy(_tmpPalette, palette, 0x300);
 	//		scalePalette(tmpPalette);
-//	waitVRetrace();
+	//	waitVRetrace();
 	if (!_vm->isCD()) {
 		setPaletteEntries(_tmpPalette, 0, 0x80);
 		waitVRetrace();
@@ -3039,7 +2981,7 @@ void GraphicsManager::paintBackbuffer_withEffect() {
 	for (uint8 i = 0; i < 7; i++) {
 		//		for (uint8 jj = 0; jj < 20; jj++) {
 		waitVRetrace();
-//		waitVRetrace();
+		//		waitVRetrace();
 		//		}
 		char *src = _videoBackbuffer + baseOffs;
 		char *dst = lockMainSurface() + baseOffs;
@@ -3064,30 +3006,30 @@ void GraphicsManager::dealFadeIn() {
 	this->_vm->_system->copyRectToScreen(this->_videoBackbuffer, _COMET_XRESOLUTION, 0, 0, _COMET_XRESOLUTION, _COMET_YRESOLUTION);
 	//	this->_vm->_system->updateScreen();
 	this->_hfCappedUpdate();
-	for (uint16 i = 0; i < 256; i += _fadeSpeedStep*2) {
+	for (uint16 i = 0; i < 256; i += _fadeSpeedStep * 2) {
 		fadePalette(mainGamePalette, tmpPalette, i, 256);
 		uploadPalette(tmpPalette);
 		//		this->_vm->_system->updateScreen();
-//		this->_hfCappedUpdate();
+		//		this->_hfCappedUpdate();
 	}
 	fadePalette(mainGamePalette, tmpPalette, 255, 256);
 	uploadPalette(tmpPalette);
 	//	this->_vm->_system->updateScreen();
-//	this->_hfCappedUpdate();
+	//	this->_hfCappedUpdate();
 	_fadeStatus = 0;
 	_justFadedOut = false;
 }
 void GraphicsManager::dealFadeOut() {
-	for (int16 i = 255; i > 0; i -= _fadeSpeedStep*2) {
+	for (int16 i = 255; i > 0; i -= _fadeSpeedStep * 2) {
 		fadePalette(mainGamePalette, tmpPalette, i, 256);
 		uploadPalette(tmpPalette);
 		//		this->_vm->_system->updateScreen();
-//		this->_hfCappedUpdate();
+		//		this->_hfCappedUpdate();
 	}
 	fadePalette(mainGamePalette, tmpPalette, 0, 256);
 	uploadPalette(tmpPalette);
 	//	this->_vm->_system->updateScreen();
-//	this->_hfCappedUpdate();
+	//	this->_hfCappedUpdate();
 	_fadeStatus = 0;
 	_justFadedOut = true;
 }
@@ -3104,7 +3046,7 @@ void GraphicsManager::tintPalette(const char *palette, char *destPalette, uint16
 		uint16 newRed = (r + g + b + 100) / 4;
 		newRed = (newRed - r) * factor;
 		newRed = (newRed >> 4) + r;
-		
+
 		destPalette[0] = newRed;
 		destPalette[1] = g * (16 - factor) / 16;
 		destPalette[2] = b * (16 - factor) / 16;
@@ -3116,19 +3058,19 @@ void GraphicsManager::capFPS_CD() {
 	uint8 check = 35 / (_vm->_gameState.targetFPS + 8);
 	uint32 vcount = 0;
 	char str[256];
-//	snprintf(str, 256, "REQ %02x -> CHK %02X\n", _vm->_gameState.targetFPS, check);
-//	debug(str);
+	//	snprintf(str, 256, "REQ %02x -> CHK %02X\n", _vm->_gameState.targetFPS, check);
+	//	debug(str);
 	while (true) {
 		{
 			Common::StackLock l(_mutex);
 			vcount = _verticalRetraceCount;
 		}
-//		snprintf(str, 256, "vc %02x\n", vcount);
-//		debug(str);
+		//		snprintf(str, 256, "vc %02x\n", vcount);
+		//		debug(str);
 		if (check <= vcount) {
 			break;
 		}
-//		_vm->_system->delayMillis(10);
+		//		_vm->_system->delayMillis(10);
 		waitVRetrace();
 	}
 	{
@@ -3197,7 +3139,7 @@ void GraphicsManager::drawFrameToScreen() {
 			clearBackbuffer();
 			paintBackbuffer_mouse();
 			uploadPalette(mainGamePalette);
-			_vm->_gameState.isAlternatePaletteActive=3;
+			_vm->_gameState.isAlternatePaletteActive = 3;
 		}
 		if (_vm->_gameState.currPakNum == 9 && _vm->_gameState.currRoomNum == 1 && _vm->_gameState.isAlternatePaletteActive == 3) {
 			memcpy(mainGamePalette, cdintroPalette, 768);
@@ -3207,7 +3149,7 @@ void GraphicsManager::drawFrameToScreen() {
 			uploadPalette(mainGamePalette);
 			_vm->_gameState.isAlternatePaletteActive = 2;
 		}
-		if (_vm->_gameState.currPakNum == 5 && _vm->_gameState.currRoomNum == 0 && (_vm->_gameState.isAlternatePaletteActive == 3 || _vm->_gameState.isAlternatePaletteActive==2)) {
+		if (_vm->_gameState.currPakNum == 5 && _vm->_gameState.currRoomNum == 0 && (_vm->_gameState.isAlternatePaletteActive == 3 || _vm->_gameState.isAlternatePaletteActive == 2)) {
 			memcpy(mainGamePalette, normalPalette, 768);
 			memcpy(tmpPalette, normalPalette, 768);
 			clearBackbuffer();

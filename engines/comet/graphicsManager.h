@@ -43,7 +43,7 @@ public:
 	void uninit();
 	void waitVRetrace();
 	void initializePalette(char *_mainPalette, char *_flahsbackPalette, char *_cdintroPalette=nullptr, char *_cdPalette2=nullptr);
-	void setBasicResources(char *speechbox, char *mainWalk, char *icons, char *objects, char *cursors=nullptr);
+	void setBasicResources(char *speechbox, char *mainWalk, char *icons, char *objects);
 	void initGameObjectsAndFlags();
 	char *getResourceData(uint8 type);
 	uint32 _rowsOffsets[_COMET_YRESOLUTION];
@@ -228,14 +228,6 @@ private:
 	char *_parkerWalkAnimation;
 	char *_type3Resource_unused;
 	char *_objectsGraphics;
-	char *_cursorGraphics;
-	char *_cursor0;
-	char *_cursor1;
-	char *_cursor2;
-	char *_cursor3;
-	char *_cursor4;
-	char *_cursor5;
-	char *_cursor6;
 	void scalePalette(char *palette);
 	void setPaletteEntries(const char *palette, uint8 startEntry, uint16 numEntries);
 
