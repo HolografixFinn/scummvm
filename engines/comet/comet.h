@@ -53,7 +53,7 @@
 #include "comet/textManager.h"
 #include "comet/scriptsManager.h"
 #include "comet/speechManager.h"
-//#include "comet/mouseManager.h"
+#include "comet/mouseManager.h"
 #include "comet_structs.h"
 #include "comet/gameState.h"
 #include "engines/advancedDetector.h"
@@ -86,7 +86,7 @@ public:
 	ScriptsManager *_scMgr;
 	AudioManager *_audioMgr;
 	SpeechManager *_spMgr;
-//	MouseManager *_moMgr;
+	MouseManager *_moMgr;
 
 	void setEscPressed();
 	void setScummVMQuit();
