@@ -215,7 +215,7 @@ void SpeechManager::playNar() {
 	resetLipSyncCounter();
 //	uint32 firstPlaySize = _vocData[27] + (_vocData[28] << 8) + (_vocData[29] << 16) +0x1f;
 	uint32 firstPlaySize = (_vocData[27] + (_vocData[28] << 8) + (_vocData[29] << 16)) - 2 + 0x20 + 1;
-	_vm->_audioMgr->playVOC(reinterpret_cast<const char *>(_vocData), firstPlaySize, 0);
+	_vm->_audioMgr->playVOC(_vocData, firstPlaySize, 0);
 	_vocRemainingSegments--;
 }
 void SpeechManager::adjustVocHeader(uint8 *vocHeader, uint32 numBytes) {

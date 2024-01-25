@@ -136,9 +136,9 @@ void GraphicsManager::callCapFPS() {
 
 void GraphicsManager::init() {
 	//	_vm->_system->getTimerManager()->installTimerProc(GraphicsManager::onFrameTimer, 1000000 / TimerRate, this, "FramesTimer");
-	this->_videoBackbuffer = new char[_COMET_XRESOLUTION * _COMET_YRESOLUTION];
+	this->_videoBackbuffer = new uint8[_COMET_XRESOLUTION * _COMET_YRESOLUTION];
 	this->_videoBackbufferSize = _COMET_XRESOLUTION * _COMET_YRESOLUTION;
-	this->_backgroundBuffer = new char[(_COMET_XRESOLUTION * _COMET_YRESOLUTION) + 8000];
+	this->_backgroundBuffer = new uint8[(_COMET_XRESOLUTION * _COMET_YRESOLUTION) + 8000];
 	_tmpBuffer = _backgroundBuffer + (_COMET_XRESOLUTION * _COMET_YRESOLUTION);
 	uint32 offset = 0;
 	for (uint32 i = 0; i < _COMET_YRESOLUTION; i++) {
@@ -266,27 +266,27 @@ void GraphicsManager::paintBackbuffer() {
 	//TEST
 	this->_currFPS++;
 }
-void GraphicsManager::initializePalette(char *_mainPalette, char *_flahsbackPalette, char *_cdintroPalette, char *_cdPalette2) {
+void GraphicsManager::initializePalette(uint8 *_mainPalette, uint8 *_flahsbackPalette, uint8 *_cdintroPalette, uint8 *_cdPalette2) {
 	mainGamePalette = _mainPalette;
 	sepiaPalette = _flahsbackPalette;
 	cdintroPalette = _cdintroPalette;
 	cd2Palette = _cdPalette2;
-	normalPalette = new char[0x300];
-	tmpPalette = new char[0x300]; //TODO it isn't there?
+	normalPalette = new uint8[0x300];
+	tmpPalette = new uint8[0x300]; //TODO it isn't there?
 	memcpy(normalPalette, mainGamePalette, 0x300);
 	memcpy(tmpPalette, mainGamePalette, 0x300); // TODO it isn't there?
 	uploadPalette(mainGamePalette);
 }
-void GraphicsManager::setBasicResources(char *speechbox, char *mainWalk, char *icons, char *objects) {
+void GraphicsManager::setBasicResources(uint8 *speechbox, uint8 *mainWalk, uint8 *icons, uint8 *objects) {
 	_speechBoxGraphics = speechbox;
 	_parkerWalkAnimation = mainWalk;
 	_iconsGraphics = icons;
 	_objectsGraphics = objects;
 }
 
-void GraphicsManager::uploadPalette(char *palette) {
+void GraphicsManager::uploadPalette(uint8 *palette) {
 	//ok ma scalepalette non necessario?
-	char _tmpPalette[0x300];
+	uint8 _tmpPalette[0x300];
 	memcpy(_tmpPalette, palette, 0x300);
 	//		scalePalette(tmpPalette);
 	//	waitVRetrace();
@@ -318,12 +318,12 @@ void GraphicsManager::scalePaletteBrightness(uint16 factor) {
 	}
 	uploadPalette(tmpPalette);
 }
-void GraphicsManager::setPaletteEntries(const char *palette, uint8 startEntry, uint16 numEntries) {
+void GraphicsManager::setPaletteEntries(const uint8 *palette, uint8 startEntry, uint16 numEntries) {
 	this->_vm->_system->getPaletteManager()->setPalette(reinterpret_cast<const byte *>(palette), startEntry, numEntries);
 }
-char *GraphicsManager::lockMainSurface() {
+uint8 *GraphicsManager::lockMainSurface() {
 	Graphics::Surface *surf = this->_vm->_system->lockScreen();
-	return (char *)surf->getPixels();
+	return (uint8 *)surf->getPixels();
 }
 void GraphicsManager::unlockMainSurface() {
 	this->_vm->_system->unlockScreen();
@@ -335,8 +335,8 @@ void GraphicsManager::initGameObjectsAndFlags() {
 		_vm->_gameState.gameVars[i] = 0;
 	}
 }
-char *GraphicsManager::getResourceData(uint8 type) {
-	char *ptr = nullptr;
+uint8 *GraphicsManager::getResourceData(uint8 type) {
+	uint8 *ptr = nullptr;
 	switch (type) {
 	case 1:
 		ptr = _parkerWalkAnimation;
@@ -350,7 +350,7 @@ char *GraphicsManager::getResourceData(uint8 type) {
 	}
 	return ptr;
 }
-void GraphicsManager::fadePalette(char *palette, char *destPalette, uint8 fadeLevel, uint16 numColors) {
+void GraphicsManager::fadePalette(uint8 *palette, uint8 *destPalette, uint8 fadeLevel, uint16 numColors) {
 	for (uint16 i = 0; i < numColors; i++) {
 		uint8 b = *palette;
 		uint16 val = (b * fadeLevel) >> 8;
@@ -369,20 +369,20 @@ void GraphicsManager::fadePalette(char *palette, char *destPalette, uint8 fadeLe
 		destPalette++;
 	}
 }
-void GraphicsManager::copyVideoBuffer(char *src, char *dst) {
+void GraphicsManager::copyVideoBuffer(uint8 *src, uint8 *dst) {
 	memcpy(dst, src, _COMET_XRESOLUTION * _COMET_YRESOLUTION);
 }
-char *GraphicsManager::getAnimData(uint8 animationIdx, char *resourceData) {
+uint8 *GraphicsManager::getAnimData(uint8 animationIdx, uint8 *resourceData) {
 	return getGraphicsData(2, animationIdx, resourceData);
 }
-char *GraphicsManager::getGraphicsData(uint8 type, uint8 animationIdx, char *resourceData) {
+uint8 *GraphicsManager::getGraphicsData(uint8 type, uint8 animationIdx, uint8 *resourceData) {
 	resourceData = resourceData + READ_LE_UINT32(resourceData + (type * 4));
 	resourceData = resourceData + READ_LE_UINT16(resourceData + (animationIdx * 4));
 	return resourceData;
 }
 
 void GraphicsManager::addStageElementsToDisplayList() {
-	char *elementsData = getGraphicsData(0, 0, _stageAnims);
+	uint8 *elementsData = getGraphicsData(0, 0, _stageAnims);
 	uint16 num = *(elementsData + 1);
 	elementsData += 8;
 	for (uint16 i = 0; i < num; i++) {
@@ -419,8 +419,8 @@ void GraphicsManager::insertInDisplayListSorted(uint8 yPos, uint16 idx) {
 void GraphicsManager::drawActorsAndStageElements() {
 	resetDrawArea();
 	uint16 numElements = _vm->_gameState.numElementsInDisplayList;
-	char *stageElements = getGraphicsData(0, 0, _stageAnims);
-	char *frames = getTypeData(1, _stageAnims);
+	uint8 *stageElements = getGraphicsData(0, 0, _stageAnims);
+	uint8 *frames = getTypeData(1, _stageAnims);
 	stageElements += 2;
 	for (uint16 i = 0; i < numElements; i++) {
 		char actorData = _vm->_gameState.displayList[i].idx;
@@ -466,7 +466,7 @@ void GraphicsManager::setDrawArea(uint16 minX, uint16 minY, uint16 maxX, uint16 
 	setDrawAreaY(minY, maxY);
 }
 
-char *GraphicsManager::getTypeData(uint8 type, char *resourceData) {
+uint8 *GraphicsManager::getTypeData(uint8 type, uint8 *resourceData) {
 	return resourceData + READ_LE_UINT32(resourceData + (type * 4));
 }
 void GraphicsManager::drawActorAnimationFrame(uint8 actorIdx) {
@@ -476,8 +476,8 @@ void GraphicsManager::drawActorAnimationFrame(uint8 actorIdx) {
 	uint16 y = actor->pivotY;
 	uint16 halfWidth = actor->halfWidth;
 	uint16 height = actor->height;
-	char *resource = _vm->_gameState.resources[actor->resourceIdx].data;
-	char *animation = getAnimData(actor->animationIdx, resource) + 2;
+	uint8 *resource = _vm->_gameState.resources[actor->resourceIdx].data;
+	uint8 *animation = getAnimData(actor->animationIdx, resource) + 2;
 	setDrawArea(actor->drawAreaMinX, actor->drawAreaMinY, actor->drawAreaMaxX, actor->drawAreaMaxY);
 	if (actor->animationType == 2) {
 		actor->currentAnimationFactor = drawAnimationFrame(resource, animation, actor->frameToDraw, actor->currentAnimationFactor, x, y, actor->numFrames);
@@ -490,14 +490,14 @@ void GraphicsManager::drawActorAnimationFrame(uint8 actorIdx) {
 	}
 	resetDrawArea();
 }
-uint16 GraphicsManager::drawAnimationFrame(char *resource, char *animation, uint16 frameIdx, uint16 factor_, int16 x, int16 y, uint16 numFrames) {
-	char *mergeBuffer = _tmpBuffer;
-	char *animation_ = animation;
+uint16 GraphicsManager::drawAnimationFrame(uint8 *resource, uint8 *animation, uint16 frameIdx, uint16 factor_, int16 x, int16 y, uint16 numFrames) {
+	uint8 *mergeBuffer = _tmpBuffer;
+	uint8 *animation_ = animation;
 	uint16 frameInfo = READ_LE_UINT16(animation_ + (frameIdx * 8));
 	uint16 factor = READ_LE_UINT16(animation_ + ((frameIdx * 8) + 2));
 	uint8 decodeType = factor >> 14;
 	factor = factor & 0x3fff;
-	char *currAnimData = animation_ + 4;
+	uint8 *currAnimData = animation_ + 4;
 	int16 currX = x;
 	int16 currY = y;
 	for (uint16 i = 0; i <= frameIdx; i++) {
@@ -536,7 +536,7 @@ uint16 GraphicsManager::drawAnimationFrame(char *resource, char *animation, uint
 	}
 	return 0;
 }
-void GraphicsManager::mergeFrames(uint16 idx1, int16 x1, int16 y1, char *data1, uint16 idx2, int16 x2, int16 y2, char *data2, int16 *buffer) {
+void GraphicsManager::mergeFrames(uint16 idx1, int16 x1, int16 y1, uint8 *data1, uint16 idx2, int16 x2, int16 y2, uint8 *data2, int16 *buffer) {
 	int16 b1[100];
 	int16 b2[100];
 	int16 *pA, *pB, *pBuf;
@@ -718,8 +718,8 @@ void GraphicsManager::mergeFrames(uint16 idx1, int16 x1, int16 y1, char *data1, 
 	//		*pBuf = (numOpsInBuffer << 8);
 	*(((uint8 *)pBuf) + 1) = numOpsInBuffer;
 }
-void GraphicsManager::decodeMergedFrame(uint16 info, uint16 x, uint16 y, char *mergeBuffer, uint16 ratio) {
-	char *ptr = mergeBuffer;
+void GraphicsManager::decodeMergedFrame(uint16 info, uint16 x, uint16 y, uint8 *mergeBuffer, uint16 ratio) {
+	uint8 *ptr = mergeBuffer;
 	ptr += READ_LE_UINT32(ptr);
 	ptr += READ_LE_UINT32(ptr);
 	uint16 value = READ_LE_UINT16(ptr);
@@ -761,7 +761,7 @@ void GraphicsManager::decodeMergedFrame(uint16 info, uint16 x, uint16 y, char *m
 			configureDecodingParameters_v1(flagsBkp);
 		} break;
 		case 1: {
-			char *dataPtr2 = mergeBuffer + READ_LE_UINT32(mergeBuffer + 4);
+			uint8 *dataPtr2 = mergeBuffer + READ_LE_UINT32(mergeBuffer + 4);
 			uint16 idx2 = extraParamLO + ((extraParamHI ^ _decodingFlags_v1) << 8);
 			if (_decodingFlags_v1 & 0x80) {
 				this->_coordinates[0].x -= getWidthOfType1Image(idx2, dataPtr2);
@@ -823,7 +823,7 @@ void GraphicsManager::decodeMergedFrame(uint16 info, uint16 x, uint16 y, char *m
 		case 10: {
 			uint16 numFrame = extraParamLO + (extraParamHI * 256);
 			uint16 offsType1Block = READ_LE_UINT32(mergeBuffer + 4);
-			char *tmpPtr = mergeBuffer + offsType1Block;
+			uint8 *tmpPtr = mergeBuffer + offsType1Block;
 			uint16 offsFrame = READ_LE_UINT32(tmpPtr + (numFrame * 4));
 			tmpPtr += offsFrame;
 			uint8 height = *(tmpPtr + 1);
@@ -876,13 +876,13 @@ void GraphicsManager::configureDecodingParameters_v2(uint8 flags) {
 	}
 	_decodingFlags_v2 = flags;
 }
-uint16 GraphicsManager::getWidthOfType1Image(uint16 idx, char *dataPtr) {
+uint16 GraphicsManager::getWidthOfType1Image(uint16 idx, uint8 *dataPtr) {
 	idx = idx & 0x0fff;
 	dataPtr += READ_LE_UINT32(dataPtr + (idx * 4));
 	uint8 size = *dataPtr;
 	return size * 16;
 }
-uint16 GraphicsManager::getHeightOfType1Image(uint16 idx, char *dataPtr) {
+uint16 GraphicsManager::getHeightOfType1Image(uint16 idx, uint8 *dataPtr) {
 	idx = idx & 0x0fff;
 	dataPtr += READ_LE_UINT32(dataPtr + (idx * 4));
 	dataPtr++;
@@ -911,7 +911,7 @@ void GraphicsManager::drawRectangleFilled(int16 left, int16 top, int16 right, in
 	}
 	uint16 width = right - left + 1;
 	uint16 height = bottom - top + 1;
-	char *dest = this->_videoBackbuffer;
+	uint8 *dest = this->_videoBackbuffer;
 	dest += (this->_rowsOffsets[top] + left);
 	uint16 toNextLine = _COMET_XRESOLUTION - width;
 	for (uint16 i = 0; i < height; i++) {
@@ -954,7 +954,7 @@ void GraphicsManager::drawHorizontalLine(int16 x1, int16 y1, int16 x2, int8 colo
 		return;
 	}
 	int16 width = x2 - x1 + 1;
-	char *dest = this->_videoBackbuffer;
+	uint8 *dest = this->_videoBackbuffer;
 	dest += this->_rowsOffsets[y1] + x1;
 	memset(dest, color, width);
 }
@@ -1074,7 +1074,7 @@ void GraphicsManager::drawLine(int16 x1, int16 y1, int16 x2, int16 y2, uint8 col
 		if (xDiff == 0 && yDiff == 0) {
 			return;
 		}
-		char *dest = this->_videoBackbuffer + x1 + (this->_rowsOffsets[y1]);
+		uint8 *dest = this->_videoBackbuffer + x1 + (this->_rowsOffsets[y1]);
 		*dest = color;
 		int16 offset = 320;
 		if (yDiff < 0) {
@@ -1220,7 +1220,7 @@ void GraphicsManager::drawDashedLine(int16 x1, int16 y1, int16 x2, int16 y2, uin
 	if (xDiff == 0 && yDiff == 0) {
 		return;
 	}
-	char *dest = this->_videoBackbuffer + x1 + (this->_rowsOffsets[y1]);
+	uint8 *dest = this->_videoBackbuffer + x1 + (this->_rowsOffsets[y1]);
 	*dest = color;
 	int16 offset = _COMET_XRESOLUTION;
 	if (yDiff < 0) {
@@ -1629,7 +1629,7 @@ void GraphicsManager::drawPolygon(int16 x, int16 y, Coordinate *coords, uint16 n
 	//here we actually start drawing the polygon
 	int16 currY = minY;
 	int16 height = (maxY - minY) + 1;
-	char *currLine = this->_videoBackbuffer + (this->_rowsOffsets[currY]);
+	uint8 *currLine = this->_videoBackbuffer + (this->_rowsOffsets[currY]);
 	do {
 		int16 _x1 = this->_polygonXBuffer[0][currY];
 		int16 _x2 = this->_polygonXBuffer[1][currY];
@@ -1667,7 +1667,7 @@ void GraphicsManager::putPixel(uint16 x, uint16 y) {
 	}
 	*(this->_videoBackbuffer + x + (this->_rowsOffsets[y])) = this->_currPixelColor;
 }
-void GraphicsManager::decodeFrameType1_special(int16 x, int16 y, char *ptr) {
+void GraphicsManager::decodeFrameType1_special(int16 x, int16 y, uint8 *ptr) {
 	// this procedure is pure EVIL :)
 	// It's a different way of decoding type1 graphics,
 	// it's basically a series of different pre-defined row patterns to be filled with a single color
@@ -2281,8 +2281,8 @@ void GraphicsManager::decodeFrameType1_special(int16 x, int16 y, char *ptr) {
 	} while (*ptr != 0);
 	//TODO:
 }
-void GraphicsManager::decodeFrameType1(uint16 idxAndFlags, uint16 left, uint16 bottom, char *surface, char *dataPtr) {
-	char *ptr = dataPtr;
+void GraphicsManager::decodeFrameType1(uint16 idxAndFlags, uint16 left, uint16 bottom, uint8 *surface, uint8 *dataPtr) {
+	uint8 *ptr = dataPtr;
 	uint16 drawX = left;
 	int16 drawY = bottom;
 	uint16 idx = idxAndFlags & 0xFFF;
@@ -2309,12 +2309,12 @@ void GraphicsManager::decodeFrameType1(uint16 idxAndFlags, uint16 left, uint16 b
 		}
 	*/
 
-	char *destPtr = surface + (drawY * _COMET_XRESOLUTION);
+	uint8 *destPtr = surface + (drawY * _COMET_XRESOLUTION);
 	bool isHorizontallyClamped = false;
 	flags ^= READ_LE_UINT16(ptr - 4);
 	if (flags & 0x8000) { //TODO check for endianness
 		//is x mirrored
-		char *tmpSrc = ptr;
+		uint8 *tmpSrc = ptr;
 		tmp = width;
 		WRITE_LE_UINT16(ptr - 4, READ_LE_UINT16(ptr - 4) ^ 0x8000); //TODO check for endianness
 		char *bPtr = this->_rowBuffer + 398;
@@ -2530,9 +2530,9 @@ void GraphicsManager::decodeFrameType1(uint16 idxAndFlags, uint16 left, uint16 b
 	}
 }
 
-void GraphicsManager::decodeFrame(uint16 idxAndFlags, uint16 x, uint16 y, char *dataPtr) {
+void GraphicsManager::decodeFrame(uint16 idxAndFlags, uint16 x, uint16 y, uint8 *dataPtr) {
 
-	char *ptr = dataPtr;
+	uint8 *ptr = dataPtr;
 	ptr += READ_LE_UINT16(ptr);
 	uint16 idx = idxAndFlags & 0x0fff; //TODO check endianness
 	uint8 flags = (idxAndFlags >> 8) & 0xa0;
@@ -2575,7 +2575,7 @@ void GraphicsManager::decodeFrame(uint16 idxAndFlags, uint16 x, uint16 y, char *
 			configureDecodingParameters_v1(flagsBkp);
 		} break;
 		case 1: {
-			char *dataPtr2 = dataPtr + READ_LE_UINT32(dataPtr + 4);
+			uint8 *dataPtr2 = dataPtr + READ_LE_UINT32(dataPtr + 4);
 			uint16 idx2 = extraParamLO + ((extraParamHI ^ _decodingFlags_v1) << 8);
 			if (_decodingFlags_v1 & 0x80) {
 				this->_coordinates[0].x -= getWidthOfType1Image(idx2, dataPtr2);
@@ -2635,7 +2635,7 @@ void GraphicsManager::decodeFrame(uint16 idxAndFlags, uint16 x, uint16 y, char *
 		case 10: {
 			uint16 numFrame = (extraParamLO + (extraParamHI * 256)) * 4;
 			uint16 offsType1Block = READ_LE_UINT32(dataPtr + 4);
-			char *tmpPtr = dataPtr + offsType1Block;
+			uint8 *tmpPtr = dataPtr + offsType1Block;
 			uint16 offsFrame = READ_LE_UINT32(tmpPtr + (numFrame));
 			tmpPtr += offsFrame;
 			uint8 height = *(tmpPtr + 1);
@@ -2659,8 +2659,8 @@ void GraphicsManager::decodeFrame(uint16 idxAndFlags, uint16 x, uint16 y, char *
 		}
 	}
 }
-void GraphicsManager::decodeFrame_scaled(uint16 idxAndFlags, uint16 x, uint16 y, char *dataPtr, uint16 scale) {
-	char *ptr = dataPtr;
+void GraphicsManager::decodeFrame_scaled(uint16 idxAndFlags, uint16 x, uint16 y, uint8 *dataPtr, uint16 scale) {
+	uint8 *ptr = dataPtr;
 	ptr += READ_LE_UINT32(ptr);
 	uint16 idx = idxAndFlags & 0x0fff; //TODO check endianness
 	uint8 flags = (idxAndFlags >> 8) & 0xa0;
@@ -2702,7 +2702,7 @@ void GraphicsManager::decodeFrame_scaled(uint16 idxAndFlags, uint16 x, uint16 y,
 			configureDecodingParameters_v1(flagsBkp);
 		} break;
 		case 1: {
-			char *dataPtr2 = dataPtr + READ_LE_UINT32(dataPtr + 4);
+			uint8 *dataPtr2 = dataPtr + READ_LE_UINT32(dataPtr + 4);
 			uint16 idx2 = extraParamLO + ((extraParamHI ^ _decodingFlags_v1) << 8);
 			if (_decodingFlags_v1 & 0x80) {
 				this->_coordinates[0].x -= getWidthOfType1Image(idx2, dataPtr2);
@@ -2762,7 +2762,7 @@ void GraphicsManager::decodeFrame_scaled(uint16 idxAndFlags, uint16 x, uint16 y,
 		case 10: {
 			uint16 numFrame = extraParamLO + (extraParamHI * 256);
 			uint16 offsType1Block = READ_LE_UINT32(dataPtr + 4);
-			char *tmpPtr = dataPtr + offsType1Block;
+			uint8 *tmpPtr = dataPtr + offsType1Block;
 			uint16 offsFrame = READ_LE_UINT32(tmpPtr + (numFrame * 4));
 			tmpPtr += offsFrame;
 			uint8 height = *(tmpPtr + 1);
@@ -2785,11 +2785,11 @@ void GraphicsManager::decodeFrame_scaled(uint16 idxAndFlags, uint16 x, uint16 y,
 		}
 	}
 }
-void GraphicsManager::decodeFrame_rotated(uint16 idxAndFlags, uint16 x, uint16 y, char *dataPtr, uint16 angle) {
+void GraphicsManager::decodeFrame_rotated(uint16 idxAndFlags, uint16 x, uint16 y, uint8 *dataPtr, uint16 angle) {
 	int16 sine = _sineCosine[angle];
 	int16 cosine = _sineCosine[angle + 0x40];
 
-	char *ptr = dataPtr;
+	uint8 *ptr = dataPtr;
 	ptr += READ_LE_UINT32(ptr);
 	uint16 idx = idxAndFlags & 0x0fff; //TODO check endianness
 	uint8 flags = (idxAndFlags >> 8) & 0xa0;
@@ -2819,7 +2819,7 @@ void GraphicsManager::decodeFrame_rotated(uint16 idxAndFlags, uint16 x, uint16 y
 			configureDecodingParameters_v1(flagsBkp);
 		} break;
 		case 1: {
-			char *dataPtr2 = dataPtr + READ_LE_UINT32(dataPtr + 4);
+			uint8 *dataPtr2 = dataPtr + READ_LE_UINT32(dataPtr + 4);
 			uint16 idx2 = extraParamLO + ((extraParamHI ^ _decodingFlags_v1) << 8);
 			if (_decodingFlags_v1 & 0x80) {
 				this->_coordinates[0].x -= getWidthOfType1Image(idx2, dataPtr2);
@@ -2879,7 +2879,7 @@ void GraphicsManager::decodeFrame_rotated(uint16 idxAndFlags, uint16 x, uint16 y
 		case 10: {
 			uint16 numFrame = extraParamLO + (extraParamHI * 256);
 			uint16 offsType1Block = READ_LE_UINT32(dataPtr + 4);
-			char *tmpPtr = dataPtr + offsType1Block;
+			uint8 *tmpPtr = dataPtr + offsType1Block;
 			uint16 offsFrame = READ_LE_UINT32(tmpPtr + (numFrame * 4));
 			tmpPtr += offsFrame;
 			uint8 height = *(tmpPtr + 1);
@@ -2928,8 +2928,8 @@ void GraphicsManager::scrollRoomHoriz(int16 direction) {
 	}
 }
 void GraphicsManager::scrollBackbufferLeft(uint16 numPixels) {
-	char *src = _videoBackbuffer + _rowsOffsets[0] + numPixels;
-	char *dst = _videoBackbuffer + _rowsOffsets[0];
+	uint8 *src = _videoBackbuffer + _rowsOffsets[0] + numPixels;
+	uint8 *dst = _videoBackbuffer + _rowsOffsets[0];
 	uint16 size = _COMET_XRESOLUTION - numPixels;
 	for (uint16 i = 0; i < _COMET_YRESOLUTION; i++) {
 		memmove(dst, src, size);
@@ -2938,8 +2938,8 @@ void GraphicsManager::scrollBackbufferLeft(uint16 numPixels) {
 	}
 }
 void GraphicsManager::copyBackgroundSlice_left(uint16 width, uint16 offsetLeft) {
-	char *src = _backgroundBuffer + _rowsOffsets[0] + offsetLeft;
-	char *dst = _videoBackbuffer + _rowsOffsets[0] + _COMET_XRESOLUTION - width;
+	uint8 *src = _backgroundBuffer + _rowsOffsets[0] + offsetLeft;
+	uint8 *dst = _videoBackbuffer + _rowsOffsets[0] + _COMET_XRESOLUTION - width;
 	uint16 remain = _COMET_XRESOLUTION - width;
 	for (uint16 i = 0; i < _COMET_YRESOLUTION; i++) {
 		memmove(dst, src, width);
@@ -2948,8 +2948,8 @@ void GraphicsManager::copyBackgroundSlice_left(uint16 width, uint16 offsetLeft) 
 	}
 }
 void GraphicsManager::scrollBackbufferRight(uint16 numPixels) {
-	char *src = _videoBackbuffer + (_COMET_XRESOLUTION * _COMET_YRESOLUTION) - 1 - numPixels;
-	char *dst = _videoBackbuffer + (_COMET_XRESOLUTION * _COMET_YRESOLUTION) - 1;
+	uint8 *src = _videoBackbuffer + (_COMET_XRESOLUTION * _COMET_YRESOLUTION) - 1 - numPixels;
+	uint8 *dst = _videoBackbuffer + (_COMET_XRESOLUTION * _COMET_YRESOLUTION) - 1;
 	uint16 size = _COMET_XRESOLUTION - numPixels;
 	for (uint16 i = 0; i < _COMET_YRESOLUTION; i++) {
 		for (uint16 j = 0; j < size; j++) {
@@ -2960,8 +2960,8 @@ void GraphicsManager::scrollBackbufferRight(uint16 numPixels) {
 	}
 }
 void GraphicsManager::copyBackgroundSlice_right(uint16 width, uint16 offsetRight) {
-	char *src = _backgroundBuffer + _rowsOffsets[0] + _COMET_XRESOLUTION - (width + offsetRight);
-	char *dst = _videoBackbuffer + _rowsOffsets[0];
+	uint8 *src = _backgroundBuffer + _rowsOffsets[0] + _COMET_XRESOLUTION - (width + offsetRight);
+	uint8 *dst = _videoBackbuffer + _rowsOffsets[0];
 	uint16 remain = _COMET_XRESOLUTION - width;
 	for (uint16 i = 0; i < _COMET_YRESOLUTION; i++) {
 		memmove(dst, src, width);
@@ -2983,8 +2983,8 @@ void GraphicsManager::paintBackbuffer_withEffect() {
 		waitVRetrace();
 		//		waitVRetrace();
 		//		}
-		char *src = _videoBackbuffer + baseOffs;
-		char *dst = lockMainSurface() + baseOffs;
+		uint8 *src = _videoBackbuffer + baseOffs;
+		uint8 *dst = lockMainSurface() + baseOffs;
 		baseOffs++;
 		for (uint16 j = 0; j < 9142; j++) {
 			*dst++ = *src++;
@@ -3038,7 +3038,7 @@ void GraphicsManager::setPaletteTint(uint16 tint) {
 	tintPalette(mainGamePalette, tmpPalette, tint);
 	uploadPalette(tmpPalette);
 }
-void GraphicsManager::tintPalette(const char *palette, char *destPalette, uint16 factor) {
+void GraphicsManager::tintPalette(const uint8 *palette, uint8 *destPalette, uint16 factor) {
 	for (uint16 i = 0; i < 256; i++) {
 		uint8 r = palette[0];
 		uint8 g = palette[1];
@@ -3207,8 +3207,8 @@ void GraphicsManager::drawRoomZoomed(int16 centerx, int16 centery) {
 	}
 	uint32 srcOffs = _rowsOffsets[y] + x;
 	uint32 dstOffs = 0;
-	char *dstPtr = lockMainSurface();
-	char *srcPtr = _videoBackbuffer;
+	uint8 *dstPtr = lockMainSurface();
+	uint8 *srcPtr = _videoBackbuffer;
 	for (uint8 j = 0; j < 100; j++) {
 		for (uint8_t i = 0; i < 160; i++) {
 			dstPtr[dstOffs++] = srcPtr[srcOffs];
@@ -3242,8 +3242,8 @@ void GraphicsManager::drawRoomZoomed_x3(int16 centerx, int16 centery) {
 	}
 	uint32 srcOffs = _rowsOffsets[y] + x;
 	uint32 dstOffs = 0;
-	char *dstPtr = lockMainSurface();
-	char *srcPtr = _videoBackbuffer;
+	uint8 *dstPtr = lockMainSurface();
+	uint8 *srcPtr = _videoBackbuffer;
 	for (uint8 j = 0; j < 66; j++) {
 		for (uint8_t i = 0; i < 106; i++) {
 			dstPtr[dstOffs++] = srcPtr[srcOffs];
@@ -3288,8 +3288,8 @@ void GraphicsManager::drawRoomZoomed_x4(int16 centerx, int16 centery) {
 	}
 	uint32 srcOffs = _rowsOffsets[y] + x;
 	uint32 dstOffs = 0;
-	char *dstPtr = lockMainSurface();
-	char *srcPtr = _videoBackbuffer;
+	uint8 *dstPtr = lockMainSurface();
+	uint8 *srcPtr = _videoBackbuffer;
 	for (uint8 j = 0; j < 50; j++) {
 		for (uint8_t i = 0; i < 80; i++) {
 			dstPtr[dstOffs++] = srcPtr[srcOffs];
@@ -3343,13 +3343,13 @@ void GraphicsManager::loadStageAnims() {
 	_stageAnims = _vm->_archMgr->allocateAndGetFile(_vm->_gmMgr->getStagesFilename(), _vm->_gameState.stageIndex + 1);
 }
 void GraphicsManager::prepareStageElements() {
-	char *data = getGraphicsData(0, 0, _stageAnims);
+	uint8 *data = getGraphicsData(0, 0, _stageAnims);
 	if (*(data + 1) != 0) {
 		decodeFrame(0, 0, 0, _stageAnims);
 	}
 }
 void GraphicsManager::loadStageElements() {
-	char *data = getGraphicsData(0, 0, _stageAnims);
+	uint8 *data = getGraphicsData(0, 0, _stageAnims);
 	uint16 nElements = *(data + 1);
 	uint16 num = nElements;
 	StageElement *stg = &_vm->_gameState.stageElements[0];
@@ -3362,7 +3362,7 @@ void GraphicsManager::loadStageElements() {
 		uint16 elemPivotX = READ_LE_UINT16(data) / 2;
 		data += 2;
 		uint16 elemPivotY = READ_LE_UINT16(data);
-		char *elem = getGraphicsData(type, elemIdx, _stageAnims) - 2;
+		uint8 *elem = getGraphicsData(type, elemIdx, _stageAnims) - 2;
 		uint8 elemHalfWidth = (*elem) / 2;
 		elem++;
 		if (elemHalfWidth == 0) {
@@ -3465,13 +3465,13 @@ void GraphicsManager::setClearScreen() {
 	_clearScreen = true;
 }
 
-char *GraphicsManager::getBackbuffer() {
+uint8 *GraphicsManager::getBackbuffer() {
 	return _videoBackbuffer;
 }
-void GraphicsManager::setBackbuffer(char *bb) {
+void GraphicsManager::setBackbuffer(uint8 *bb) {
 	_videoBackbuffer = bb;
 }
-char *GraphicsManager::getBackground() {
+uint8 *GraphicsManager::getBackground() {
 	return _backgroundBuffer;
 }
 /*
@@ -3504,8 +3504,8 @@ void GraphicsManager::drawIconFrame(uint8 selected, uint8 idx) {
 		drawSingleAnimFrame(_vm->_gameState.activeObject, x, y, idx, _objectsGraphics);
 	}
 }
-void GraphicsManager::drawSingleAnimFrame(uint8 animIdx, int16 x, int16 y, uint16 frameIdx, char *data) {
-	char *anim = getGraphicsData(2, animIdx, data);
+void GraphicsManager::drawSingleAnimFrame(uint8 animIdx, int16 x, int16 y, uint16 frameIdx, uint8 *data) {
+	uint8 *anim = getGraphicsData(2, animIdx, data);
 	uint8 numFrames = *(anim + 1);
 	anim += 2;
 	int16 tmpX = x;
@@ -3517,7 +3517,7 @@ void GraphicsManager::drawSingleAnimFrame(uint8 animIdx, int16 x, int16 y, uint1
 			tmpIdx -= numFrames;
 		}
 		idxAndFlags = READ_LE_UINT16(anim + (tmpIdx * 8));
-		char *tmp = anim + 4;
+		uint8 *tmp = anim + 4;
 		for (uint8 i = 0; i <= tmpIdx; i++) {
 			tmpX += READ_LE_INT16(tmp);
 			tmp += 2;
@@ -3742,7 +3742,7 @@ void GraphicsManager::diaryFade(bool isFadeOut, int16 currS, int16 maxS) {
 		_isAlternatePaletteActive = val;
 	}
 	*/
-char *GraphicsManager::getTmpBuffer() {
+uint8 *GraphicsManager::getTmpBuffer() {
 	return _tmpBuffer;
 }
 
@@ -3800,7 +3800,7 @@ void GraphicsManager::drawRandomLinesOrDots() {
 		ptr[1] += ptr[2];
 		ptr[2]++;
 		if ((140 + _vm->_gmMgr->getRandom(10)) < ptr[1]) {
-			char *tmp = _videoBackbuffer;
+			uint8 *tmp = _videoBackbuffer;
 			_videoBackbuffer = _backgroundBuffer;
 			putPixel(ptr[0], ptr[1]);
 			_videoBackbuffer = tmp;
@@ -3871,7 +3871,7 @@ void GraphicsManager::drawLightnings() {
 void GraphicsManager::replaceStageColors() {
 	//this implementation using goto is horrible, but is the quickest translation from ASM
 	//TODO make it better
-	char *ptr = _backgroundBuffer + (320 + 172) - 1;
+	uint8 *ptr = _backgroundBuffer + (320 + 172) - 1;
 	uint16 outer = 86;
 	uint16 val = 0xff;
 	int16 inner = 0;

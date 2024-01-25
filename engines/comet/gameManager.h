@@ -206,7 +206,7 @@ public:
 	uint8 comparePoints(uint16 x1, uint16 y1, uint16 x2, uint16 y2);
 	uint8 _roomZoomLevel;
 	bool _zoomRestored;
-	char *priorityAllocateAndGetFile(const char *archiveName, uint16 fileNum);
+	uint8 *priorityAllocateAndGetFile(const char *archiveName, uint16 fileNum);
 	void showLoopedAnimation(uint8 subfile, uint8 anim, int16 frame_flags, uint8 numLoops, uint8 numDigiFX, const char *cues);
 	uint16 handleSkullPuzzle();
 	uint16 forceLoading;
@@ -280,9 +280,9 @@ private:
 	void resetDefaultKeyFlags();
 	void initAllResources();
 
-	char *_resPakData;
+	uint8 *_resPakData;
 
-	char *_fontData;
+	uint8 *_fontData;
 	//			uint16 _movementMask;
 
 	struct Point {
@@ -397,7 +397,7 @@ private:
 	char *_copyProtectionTitleSentence;
 	char *_copyProtectionInstructionsSentence;
 	Constellation _copyProtectionsConstellationsData[11 * 16];
-	char *_copyProtectionStarsGraphics;
+	uint8 *_copyProtectionStarsGraphics;
 	uint8 _copyProtectionRightConstellationRow;
 	uint8 _copyProtectionRightConstellationColumn;
 	Constellation _copyProtectionDisplayedConstellationsData[9];
@@ -410,7 +410,7 @@ private:
 	uint16 skullTilesState[36];
 	uint16 skullCursorX;
 	uint16 skullCursorY;
-	char *skullPuzzleData;
+	uint8 *skullPuzzleData;
 	void drawSkullPuzzle();
 	void drawSkullPuzzleTile(uint16 col, uint16 row, uint16 xoffs, uint16 yoffs);
 	bool skullPuzzleCheckSolution();

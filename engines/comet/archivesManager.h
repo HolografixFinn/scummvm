@@ -32,14 +32,14 @@ namespace Cometengine {
 	public:
 		ArchivesManager(CometEngine *vm);
 		~ArchivesManager();
-		void getFile(const char *archiveName, uint16 fileNum, char *destBuffer, uint32 *decomSize=nullptr);
-		char * allocateAndGetFile(const char *archiveName, uint16 fileNum, uint32 *decomSize = nullptr);
+		void getFile(const char *archiveName, uint16 fileNum, uint8 *destBuffer, uint32 *decomSize=nullptr);
+		uint8 * allocateAndGetFile(const char *archiveName, uint16 fileNum, uint32 *decomSize = nullptr);
 		void readFileBlock(const char *filename, uint8 block, char *buffer, uint32 size);
 		bool checkValidSubfile(const char *archiveName, uint16 fileNum);
 
 	private:
 		CometEngine *_vm;
-		void decompress(uint8 type, char *src, char *dest, uint32 decompressedSize);
+		void decompress(uint8 type, uint8 *src, uint8 *dest, uint32 decompressedSize);
 		unsigned char *compressed;
 		unsigned char *uncompressed;
 
@@ -81,7 +81,7 @@ namespace Cometengine {
 		uint32 readBits(uint16 n_bits);
 		uint8 bits_left;
 		unsigned char curr_byte;
-		char *currCompressedPtr;
+		uint8 *currCompressedPtr;
 
 		uint16 reverseBitsInWord(uint16 val);
 		uint8 decodeHuffman(HuffmanTreeNode * huffTree);
