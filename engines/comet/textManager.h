@@ -34,8 +34,8 @@ class CometEngine;
 		void initResources();
 		void loadSystemAndObjects();
 		uint16 calcStringWidth(const char *string);
-		void setFontDataAndColor(char *data, uint8 textColor);
-		void drawString(uint16 x, uint16 y, char *videoBuffer, const char *string);
+		void setFontDataAndColor(uint8 *data, uint8 textColor);
+		void drawString(uint16 x, uint16 y, uint8 *videoBuffer, const char *string);
 		void drawOutlinedString(uint16 x, uint16 y, const char *string,uint8 stringColor,uint8 borderColor);
 
 		void actorSaySentence(uint8 actorIdx, uint16 sentenceIdx, uint8 color);
@@ -103,9 +103,9 @@ class CometEngine;
 		void decodeTextBuffer(char *data, uint32 size, uint32 offset);
 
 		//font/strings data
-		char *_fontData;
-		char *_charsGraphics;
-		char *_charsData;
+		uint8 *_fontData;
+		uint8 *_charsGraphics;
+		uint8 *_charsData;
 		uint8 _charsHeight;
 		uint16 _fontSheetWidth;
 		uint8 _spaceCharWidth;
