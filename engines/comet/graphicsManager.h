@@ -42,43 +42,43 @@ public:
 	void init();
 	void uninit();
 	void waitVRetrace();
-	void initializePalette(char *_mainPalette, char *_flahsbackPalette, char *_cdintroPalette=nullptr, char *_cdPalette2=nullptr);
-	void setBasicResources(char *speechbox, char *mainWalk, char *icons, char *objects);
+	void initializePalette(uint8 *_mainPalette, uint8 *_flahsbackPalette, uint8 *_cdintroPalette=nullptr, uint8 *_cdPalette2=nullptr);
+	void setBasicResources(uint8 *speechbox, uint8 *mainWalk, uint8 *icons, uint8 *objects);
 	void initGameObjectsAndFlags();
-	char *getResourceData(uint8 type);
+	uint8 *getResourceData(uint8 type);
 	uint32 _rowsOffsets[_COMET_YRESOLUTION];
-	char *lockMainSurface();
+	uint8 *lockMainSurface();
 	void unlockMainSurface();
-	char *_stageAnims;
+	uint8 *_stageAnims;
 	//palettes
-	void fadePalette(char *palette, char *destPalette, uint8 fadeLevel, uint16 numColors);
-	void uploadPalette(char *palette);
+	void fadePalette(uint8 *palette, uint8 *destPalette, uint8 fadeLevel, uint16 numColors);
+	void uploadPalette(uint8 *palette);
 //	void uploadPalettePartial(char *palette, uint16 startIdx, uint16 count);
-	char *mainGamePalette; // _primaryPaletteData;
-	char *sepiaPalette;     //_secondaryPaletteData;
-	char *normalPalette;
-	char *tmpPalette;
-	char *cdintroPalette;
-	char *cd2Palette;
+	uint8 *mainGamePalette; // _primaryPaletteData;
+	uint8 *sepiaPalette;     //_secondaryPaletteData;
+	uint8 *normalPalette;
+	uint8 *tmpPalette;
+	uint8 *cdintroPalette;
+	uint8 *cd2Palette;
 	void setPaletteTint(uint16 tint);
-	void tintPalette(const char *palette, char *destPalette, uint16 factor);
+	void tintPalette(const uint8 *palette, uint8 *destPalette, uint16 factor);
 	void scalePaletteBrightness(uint16 factor);
 	void fadePaletteBlock(uint16 blockIdx, uint16 fadeLevel);
 
 	//
-	void copyVideoBuffer(char *src, char *dst);
-	char *_videoBackbuffer;
-	char *_backgroundBuffer;
+	void copyVideoBuffer(uint8 *src, uint8 *dst);
+	uint8 *_videoBackbuffer;
+	uint8 *_backgroundBuffer;
 	void addStageElementsToDisplayList();
-	char *getAnimData(uint8 animationIdx, char *resourceData);
-	char *getGraphicsData(uint8 type, uint8 animationIdx, char *resourceData);
+	uint8 *getAnimData(uint8 animationIdx, uint8 *resourceData);
+	uint8 *getGraphicsData(uint8 type, uint8 animationIdx, uint8 *resourceData);
 	void addActorsToDisplayList();
 	void drawActorsAndStageElements();
 	void resetDrawArea();
 	void setDrawAreaX(uint16 minX, uint16 maxX);
 	void setDrawAreaY(uint16 minY, uint16 maxY);
 	void setDrawArea(uint16 minX, uint16 minY, uint16 maxX, uint16 maxY);
-	char *getTypeData(uint8 type, char *resourceData);
+	uint8 *getTypeData(uint8 type, uint8 *resourceData);
 	void drawDashedLine(int16 x1, int16 y1, int16 x2, int16 y2, uint8 color);
 	void scrollRoomLeft();
 	void scrollRoomRight();
@@ -104,10 +104,10 @@ public:
 	bool getJustFadedOut();
 	void drawFrameToScreen();
 	void setClearScreen();
-	char *getBackbuffer();
-	void setBackbuffer(char *bb);
-	char *getBackground();
-	char *getTmpBuffer();
+	uint8 *getBackbuffer();
+	void setBackbuffer(uint8 *bb);
+	uint8 *getBackground();
+	uint8 *getTmpBuffer();
 	//			uint8 getNumStageElements();
 
 	//			StageElement *getStageElement(uint8 idx);
@@ -117,7 +117,7 @@ public:
 	void drawSimpleBox(int16 left, int16 top, int16 right, int16 bottom, uint8 color_unused);
 	void paintBackbuffer_mouse();
 	void paintBackbuffer();
-	void decodeFrame(uint16 idxAndFlags, uint16 x, uint16 y, char *dataPtr);
+	void decodeFrame(uint16 idxAndFlags, uint16 x, uint16 y, uint8 *dataPtr);
 	void drawLine(int16 x1, int16 y1, int16 x2, int16 y2, uint8 color);
 	void drawRectangleFilled(int16 left, int16 top, int16 right, int16 bottom, uint8 color);
 	void drawIconFrame(uint8 selected, uint8 idx);
@@ -131,7 +131,7 @@ public:
 	void drawDiarySentences(int16 currS, int16 maxS, int16 fontC);
 	void drawDiaryPagesAnimation(bool forward);
 	void resetFullscreenViewport();
-	uint16 drawAnimationFrame(char *resource, char *animation, uint16 frameIdx, uint16 factor, int16 x, int16 y, uint16 numFrames);
+	uint16 drawAnimationFrame(uint8 *resource, uint8 *animation, uint16 frameIdx, uint16 factor, int16 x, int16 y, uint16 numFrames);
 	void callCapFPS();
 	void _hfCappedUpdate(bool incFPS=true);
 	//stage color replace?
@@ -156,7 +156,7 @@ public:
 	void handleRandomStars();
 
 	//
-	char *_iconsGraphics;
+	uint8 *_iconsGraphics;
 
 	//TODO this function down here is useful only for debug draw
 	uint32 getFPS() { return _FPS; }
@@ -224,12 +224,12 @@ private:
 	bool _isPaintWithEffect;
 
 	//resources
-	char *_speechBoxGraphics;
-	char *_parkerWalkAnimation;
-	char *_type3Resource_unused;
-	char *_objectsGraphics;
+	uint8 *_speechBoxGraphics;
+	uint8 *_parkerWalkAnimation;
+	uint8 *_type3Resource_unused;
+	uint8 *_objectsGraphics;
 	void scalePalette(char *palette);
-	void setPaletteEntries(const char *palette, uint8 startEntry, uint16 numEntries);
+	void setPaletteEntries(const uint8 *palette, uint8 startEntry, uint16 numEntries);
 
 	//			uint16 _gameObjects[256];
 	//			uint16 _gameFlags[256];
@@ -244,9 +244,9 @@ private:
 	uint16 _drawAreaMaxY;
 
 	void drawActorAnimationFrame(uint8 actorIdx);
-	char *_tmpBuffer;
-	void mergeFrames(uint16 idx1, int16 x1, int16 y1, char *data1, uint16 idx2, int16 x2, int16 y2, char *data2, int16 *buffer);
-	void decodeMergedFrame(uint16 info, uint16 x, uint16 y, char *buffer, uint16 ratio);
+	uint8 *_tmpBuffer;
+	void mergeFrames(uint16 idx1, int16 x1, int16 y1, uint8 *data1, uint16 idx2, int16 x2, int16 y2, uint8 *data2, int16 *buffer);
+	void decodeMergedFrame(uint16 info, uint16 x, uint16 y, uint8 *buffer, uint16 ratio);
 	struct Coordinate {
 		int16 x;
 		int16 y;
@@ -266,8 +266,8 @@ private:
 
 	void configureDecodingParameters_v1(uint8 flags);
 	void configureDecodingParameters_v2(uint8 flags);
-	uint16 getWidthOfType1Image(uint16 idx, char *dataPtr);
-	uint16 getHeightOfType1Image(uint16 idx, char *dataPtr);
+	uint16 getWidthOfType1Image(uint16 idx, uint8 *dataPtr);
+	uint16 getHeightOfType1Image(uint16 idx, uint8 *dataPtr);
 
 	void drawPolygon(int16 x, int16 y, Coordinate *coords, uint16 numCoords, uint8 color);
 	Coordinate _tmpCoords1[100];
@@ -286,14 +286,14 @@ private:
 
 	uint8 _currPixelColor;
 
-	void decodeFrameType1_special(int16 x, int16 y, char *ptr);
+	void decodeFrameType1_special(int16 x, int16 y, uint8 *ptr);
 	uint16 specialLinesOffsets[_COMET_YRESOLUTION];
 
 	//			void decodeFrame_0(uint16 idxAndFlags, uint16 x, uint16 y, char *dataPtr);
 	void drawHorizontalLine(int16 x1, int16 y1, int16 x2, int8 color);
-	void decodeFrameType1(uint16 idxAndFlags, uint16 x, uint16 y, char *surface, char *dataPtr);
-	void decodeFrame_scaled(uint16 idxAndFlags, uint16 x, uint16 y, char *dataPtr, uint16 scale);
-	void decodeFrame_rotated(uint16 idxAndFlags, uint16 x, uint16 y, char *dataPtr, uint16 angle);
+	void decodeFrameType1(uint16 idxAndFlags, uint16 x, uint16 y, uint8 *surface, uint8 *dataPtr);
+	void decodeFrame_scaled(uint16 idxAndFlags, uint16 x, uint16 y, uint8 *dataPtr, uint16 scale);
+	void decodeFrame_rotated(uint16 idxAndFlags, uint16 x, uint16 y, uint8 *dataPtr, uint16 angle);
 	char _rowBuffer[400];
 
 	static int16 _sineCosine[];
@@ -308,7 +308,7 @@ private:
 	//			StageElement _stageElements[249];
 	//			uint8 _numStageElements;
 
-	void drawSingleAnimFrame(uint8 animIdx, int16 x, int16 y, uint16 frameIdx, char *data);
+	void drawSingleAnimFrame(uint8 animIdx, int16 x, int16 y, uint16 frameIdx, uint8 *data);
 
 	uint8 _activeObjectBorderColor;
 };

@@ -96,7 +96,7 @@ namespace Cometengine {
 	struct Resource {
 		uint8 type;
 		uint8 fileIdx;
-		char *data;
+		uint8 *data;
 	}PACKED_STRUCT;
 #include "common/pack-end.h"
 

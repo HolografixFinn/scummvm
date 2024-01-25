@@ -40,7 +40,7 @@
 namespace Cometengine {
 
 CometEngine::CometEngine(OSystem *syst, const ADGameDescription *gameDesc) : Engine(syst), _gameDescription(gameDesc),
-																			 _archMgr(nullptr), _gmMgr(nullptr), _gMgr(nullptr), _scMgr(nullptr), _txtMgr(nullptr), _audioMgr(nullptr), _spMgr(nullptr),
+																			 _archMgr(nullptr), _gmMgr(nullptr), _gMgr(nullptr), _scMgr(nullptr), _txtMgr(nullptr), _audioMgr(nullptr), _spMgr(nullptr), //_moMgr(nullptr),
 																			 _isEscPressed(false), _isScummVMQuit(false), _isGameQuit(false),
 																			 _isCDVersion(false), _isComet(false), _isMuseum(false), _isDemo(false), _gameState(), _console(nullptr) {
 	_image = nullptr;
@@ -149,6 +149,7 @@ CometEngine::~CometEngine() {
 	delete _scMgr;
 	delete _txtMgr;
 	delete _spMgr;
+//	delete _moMgr;
 }
 
 void CometEngine::initManagers() {
@@ -164,6 +165,7 @@ void CometEngine::initManagers() {
 	_txtMgr = new TextManager(this); //, currentLang);
 	_scMgr = new ScriptsManager(this);
 	_spMgr = new SpeechManager(this, isCD());
+//	_moMgr = new MouseManager(this);
 	_gmMgr->loadResPak();
 }
 void CometEngine::initBasicResources() {
@@ -179,6 +181,9 @@ bool CometEngine::isQuitRequested() {
 Common::Error CometEngine::run() {
 	_console = new Console();
 	setDebugger(_console);
+	if (_system->hasFeature(OSystem::Feature::kFeatureVSync)) {
+		_system->setFeatureState(OSystem::Feature::kFeatureVSync, true);
+	}
 	initManagers();
 
 	while (!_isEscPressed) {

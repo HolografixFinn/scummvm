@@ -48,8 +48,8 @@ void AudioManager::init() {
 }
 void AudioManager::initResources() {
 	//ok ma musSubbfileData buffer[0x0a] ???
-	_musicData = new char[13000];
-	_digiSampleData = new char[65000];
+	_musicData = new uint8[13000];
+	_digiSampleData = new uint8[65000];
 	_vm->_gameState.currentMusicFile = 0;
 }
 
@@ -122,7 +122,7 @@ void AudioManager::playDigiCurrent(uint8 numLoops) {
 				_sbdigi->playVOC(_digiSampleData, _digiDataSize, numLoops);
 			}
 }
-void AudioManager::playVOC(const char* vocData, uint32 dataSize, uint8 numLoops) {
+void AudioManager::playVOC(const uint8* vocData, uint32 dataSize, uint8 numLoops) {
 	_sbdigi->stopPlaying();
 	_currenDigiFile = 0xff;
 	_sbdigi->playVOC(vocData, dataSize, 0);
@@ -135,7 +135,7 @@ void AudioManager::setVoiceParams(uint16 value, uint16 channel, uint16 command) 
 }
 void AudioManager::setSecondaryVoiceParams(uint16 value, uint16 channel, uint16 command) {
 	if (this->_isAudioInited) {
-		char *ptr = _musicData;
+		uint8 *ptr = _musicData;
 		uint16 offs = READ_LE_UINT16(ptr + 0x0e);
 		ptr += offs;
 		offs = READ_LE_UINT16(ptr + (channel * 2));
@@ -808,7 +808,7 @@ void AudioManager::SBDigiDriver::uninstallDriver() { //AH=02
 }
 void AudioManager::SBDigiDriver::restoreOriginalIRQ() { //AH=04
 }
-void AudioManager::SBDigiDriver::playVOC(const char *vocData, uint32 dataSize, uint8 numLoops) { //AH=06
+void AudioManager::SBDigiDriver::playVOC(const uint8 *vocData, uint32 dataSize, uint8 numLoops) { //AH=06
 	_mstr = new Common::MemoryReadStream(reinterpret_cast<const byte *>(vocData), dataSize);
 	Audio::SeekableAudioStream *sastr = Audio::makeVOCStream(_mstr, Audio::FLAG_UNSIGNED, DisposeAfterUse::YES);
 	if (numLoops > 1) {

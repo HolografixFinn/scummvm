@@ -30,8 +30,8 @@
 #define COMET_COMPRESSION_FLAG_IS_RIGHT_NODE 0x02
 
 namespace Cometengine {
-	void ArchivesManager::decompress(uint8 typeFlags, char *src, char *dest, uint32 decompressedSize) {
-		char *currDecompressedPtr = nullptr;
+	void ArchivesManager::decompress(uint8 typeFlags, uint8 *src, uint8 *dest, uint32 decompressedSize) {
+		uint8 *currDecompressedPtr = nullptr;
 		uint32 backOffset = 0;
 		uint32 howMany = 0;
 
@@ -380,7 +380,7 @@ namespace Cometengine {
 		tree2 = nullptr;
 		tree3 = nullptr;
 	}
-	void ArchivesManager::getFile(const char *archiveName, uint16 fileNum, char *destBuffer, uint32 *decompSize) {
+	void ArchivesManager::getFile(const char *archiveName, uint16 fileNum, uint8 *destBuffer, uint32 *decompSize) {
 		char filename[32];
 		Common::File f;
 		uint32 fileOffset;
@@ -391,7 +391,7 @@ namespace Cometengine {
 		uint8 compressionType = 0;
 		uint8 compressionFlags = 0;
 		uint16 relativeOffsetToData = 0;
-		char *tmpBuffer = nullptr;
+		uint8 *tmpBuffer = nullptr;
 
 		addExtensionToFile(filename, archiveName, ".PAK");
 		if (!f.open(filename)) {
@@ -456,9 +456,9 @@ namespace Cometengine {
 		return true;
 
 	}
-	char * ArchivesManager::allocateAndGetFile(const char *archiveName, uint16 fileNum, uint32 *decompSize) {
+	uint8 * ArchivesManager::allocateAndGetFile(const char *archiveName, uint16 fileNum, uint32 *decompSize) {
 		char filename[32];
-		char *destBuffer;
+		uint8 *destBuffer;
 		Common::File f;
 		uint32 fileOffset;
 		uint32 relocations[100];
@@ -468,7 +468,7 @@ namespace Cometengine {
 		uint8 compressionType = 0;
 		uint8 compressionFlags = 0;
 		uint16 relativeOffsetToData = 0;
-		char *tmpBuffer = nullptr;
+		uint8 *tmpBuffer = nullptr;
 
 		addExtensionToFile(filename, archiveName, ".PAK");
 		if (!f.open(filename)) {
@@ -493,7 +493,7 @@ namespace Cometengine {
 		relativeOffsetToData = f.readUint16LE();
 
 		f.seek(relativeOffsetToData, SEEK_CUR);
-		destBuffer = new char[decompressedSize + 0x10cc];
+		destBuffer = new uint8[decompressedSize + 0x10cc];
 		if (destBuffer == nullptr) {
 			f.close();
 			return nullptr;
