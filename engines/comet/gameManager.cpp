@@ -302,7 +302,7 @@ void GameManager::loadResPak() {
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 3), //icons
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 4)  //objects
 		);
-//		_vm->_moMgr->setCursorsGraphics(_vm->_archMgr->allocateAndGetFile("RES.PAK", 9));
+		_vm->_moMgr->setCursorsGraphics(_vm->_archMgr->allocateAndGetFile("RES.PAK", 9));
 		updateFontDataAndColor(0);
 		this->_vm->_gMgr->initializePalette(
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 5), //main palette

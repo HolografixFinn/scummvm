@@ -10,6 +10,7 @@ MODULE_OBJS = \
 	gameState.o \
 	graphicsManager.o \
 	metaengine.o \
+	mouseManager.o \
 	scriptsManager.o \
 	speechManager.o \
 	textManager.o \
