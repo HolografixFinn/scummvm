@@ -67,7 +67,7 @@ CometEngine::CometEngine(OSystem *syst, const ADGameDescription *gameDesc) : Eng
 	if (scumm_strnicmp(_gameDescription->gameId, "comet", 5) == 0) {
 		_isComet = true;
 		if (_isCDVersion) {
-			Common::FSNode gamePath(ConfMan.get("path"));
+			Common::FSNode gamePath(Common::Path(ConfMan.get("path")));
 			Common::FSNode shadowPath = gamePath.getChild("SHADOW");
 			SearchMan.addDirectory("SHADOW", shadowPath, 0, 1);
 		}
@@ -77,7 +77,7 @@ CometEngine::CometEngine(OSystem *syst, const ADGameDescription *gameDesc) : Eng
 	} else if (scumm_strnicmp(_gameDescription->gameId, "museum", 6) == 0) {
 		_isMuseum = true;
 		if (_isCDVersion) {
-			Common::FSNode gamePath(ConfMan.get("path"));
+			Common::FSNode gamePath(Common::Path(ConfMan.get("path")));
 			Common::FSNode museePath = gamePath.getChild("MUSEE");
 			SearchMan.addDirectory("MUSEE", museePath, 0, 1);
 		}
