@@ -116,7 +116,7 @@ uint16 TextManager::calcStringWidth(const char *string) {
 	}
 	return width;
 }
-void TextManager::setFontDataAndColor(char *data, uint8 textColor) {
+void TextManager::setFontDataAndColor(uint8 *data, uint8 textColor) {
 	//ok
 	_fontData = data;
 	uint16 numChars = READ_LE_UINT16(data);
@@ -133,9 +133,9 @@ void TextManager::setFontDataAndColor(char *data, uint8 textColor) {
 	_charsData = _fontData + offset - (numChars * 2);
 	_currStringColor = textColor;
 }
-void TextManager::drawString(uint16 x, uint16 y, char *videoBuffer, const char *string) {
+void TextManager::drawString(uint16 x, uint16 y, uint8 *videoBuffer, const char *string) {
 	_stringXPos = x;
-	char *dest = videoBuffer;
+	uint8 *dest = videoBuffer;
 	while (*string != 0) {
 		byte c = *string++;
 		uint16 charDescriptor = READ_BE_UINT16(_charsData + (c * 2)); //dunno why this is big endian
@@ -143,7 +143,7 @@ void TextManager::drawString(uint16 x, uint16 y, char *videoBuffer, const char *
 		uint8 charWidth = (charDescriptor >> 12) & 0x0f;
 		if (charWidth != 0) {
 			charDescriptor = charDescriptor & 0x0fff;
-			char *data = this->_charsGraphics + (charDescriptor / 8);
+			uint8 *data = this->_charsGraphics + (charDescriptor / 8);
 			char charBitmask = 0x80 >> (charDescriptor & 0x07);
 			uint16 currXPos = _stringXPos;
 			uint16 currYPos = y;
@@ -418,7 +418,7 @@ int16 TextManager::printStringLines(const char *string, int16 px, int16 py, uint
 }
 
 void TextManager::drawOutlinedString(uint16 x, uint16 y, const char *string, uint8 stringColor, uint8 borderColor) {
-	char *videBuffer = _vm->_gMgr->getBackbuffer();
+	uint8 *videBuffer = _vm->_gMgr->getBackbuffer();
 	_vm->_gmMgr->updateFontDataAndColor(borderColor);
 	drawString(x + 1, y + 1, videBuffer, string);
 	drawString(x + 1, y - 1, videBuffer, string);
