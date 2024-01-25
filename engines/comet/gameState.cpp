@@ -164,7 +164,7 @@ void gameState::serializeResource(Resource &resource, CometXorSerializer &s) {
 	s.syncAsUint32LE(_tmp); 
 	resource.data = reinterpret_cast<char *>(_tmp);
 	*/
-	syncPointer<char>(resource.data, s);
+	syncPointer<uint8>(resource.data, s);
 }
 void gameState::serializeRoomScript(RoomScript &script, CometXorSerializer &s) {
 	uint32 dzero = 0;

@@ -46,13 +46,13 @@ class CometEngine;
 		uint8 getSampleIdx() { return _currenDigiFile; }
 		void loadDigiSubfile(uint16 subfile);
 		void playDigiCurrent(uint8 numLoops);
-		void playVOC(const char *vocData, uint32 dataSize, uint8 numLoops);
+		void playVOC(const uint8 *vocData, uint32 dataSize, uint8 numLoops);
 		uint8 getDigiPlayingStatus();
 	private:
 		void timerProc();
 		CometEngine *_vm;
-		char *_musicData;
-		char *_digiSampleData;
+		uint8 *_musicData;
+		uint8 *_digiSampleData;
 //		uint8 _currentMusicFile;
 		uint8 _currenDigiFile;
 		uint32 _digiDataSize;
@@ -204,7 +204,7 @@ class CometEngine;
 			virtual void initCard() = 0; //AH=00
 			virtual void uninstallDriver() = 0; //AH=02
 			virtual void restoreOriginalIRQ() = 0; //AH=04
-			virtual void playVOC(const char *vocData, uint32 dataSize, uint8 numLoops) = 0; //AH=06
+			virtual void playVOC(const uint8 *vocData, uint32 dataSize, uint8 numLoops) = 0; //AH=06
 			virtual void stopPlaying() = 0; //AH=08
 			virtual void setFreqOffset(uint16 offs) = 0; //AH=0a
 			virtual void nop() = 0; //AH=0c
@@ -221,7 +221,7 @@ class CometEngine;
 			virtual void initCard(); //AH=00
 			virtual void uninstallDriver(); //AH=02
 			virtual void restoreOriginalIRQ(); //AH=04
-			virtual void playVOC(const char *vocData, uint32 dataSize, uint8 numLoops); //AH=06
+			virtual void playVOC(const uint8 *vocData, uint32 dataSize, uint8 numLoops); //AH=06
 			virtual void stopPlaying(); //AH=08
 			virtual void setFreqOffset(uint16 offs); //AH=0a
 			virtual void nop(); //AH=0c

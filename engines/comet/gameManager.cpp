@@ -302,6 +302,7 @@ void GameManager::loadResPak() {
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 3), //icons
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 4)  //objects
 		);
+//		_vm->_moMgr->setCursorsGraphics(_vm->_archMgr->allocateAndGetFile("RES.PAK", 9));
 		updateFontDataAndColor(0);
 		this->_vm->_gMgr->initializePalette(
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 5), //main palette
@@ -426,9 +427,9 @@ void GameManager::killAllNPCs() {
 	}
 }
 void GameManager::showLoopedAnimation(uint8 subfile, uint8 anim, int16 frame_flags, uint8 numLoops, uint8 numDigiFX, const char *cues) {
-	char *subfileData = nullptr;
-	char *paletteData = nullptr;
-	char *animData = nullptr;
+	uint8 *subfileData = nullptr;
+	uint8 *paletteData = nullptr;
+	uint8 *animData = nullptr;
 	uint8 hasPalette = 0;
 	uint8 sampleIdx = 0;
 	uint8 nextCue = 0;
@@ -552,8 +553,8 @@ uint8 GameManager::getResourceIdx(uint8 type, uint8 fileIdx) {
 	}
 	return resourceIdx;
 }
-char *GameManager::priorityAllocateAndGetFile(const char *archiveName, uint16 fileNum) {
-	char *data = 0;
+uint8 *GameManager::priorityAllocateAndGetFile(const char *archiveName, uint16 fileNum) {
+	uint8 *data = 0;
 	data = _vm->_archMgr->allocateAndGetFile(archiveName, fileNum);
 	if (data == 0) {
 		clearUnusedResources();
@@ -666,7 +667,7 @@ void GameManager::actorPrepareAnimation(Actor *actor, uint8 animationIdx) {
 	if (actor->resourceIdx == -1) {
 		actor->numFrames = 0;
 	} else {
-		char *animationData = _vm->_gMgr->getAnimData(animationIdx, _vm->_gameState.resources[actor->resourceIdx].data);
+		uint8 *animationData = _vm->_gMgr->getAnimData(animationIdx, _vm->_gameState.resources[actor->resourceIdx].data);
 		actor->numFrames = *(animationData + 1);
 	}
 	actor->frameToDraw = 0;
@@ -733,7 +734,7 @@ void GameManager::handlePause() {
 		}
 		xPos = (320 - _vm->_txtMgr->calcStringWidth(stringBuffer)) / 2;
 		yPos = 0xb4;
-		char *videoBuffer = _vm->_gMgr->lockMainSurface();
+		uint8 *videoBuffer = _vm->_gMgr->lockMainSurface();
 		updateFontDataAndColor(0x50);
 		_vm->_txtMgr->drawString(xPos + 1, yPos + 1, videoBuffer, stringBuffer);
 		_vm->_txtMgr->drawString(xPos + 1, yPos - 1, videoBuffer, stringBuffer);
@@ -1159,7 +1160,7 @@ void GameManager::handleActorAnimation(Actor *actor) {
 		actorPrepareAnimation(actor, animIdx);
 	} else {
 		if (actor->fixedAnimationFrame == -1) {
-			char *animPtr = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data) + 2;
+			uint8 *animPtr = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data) + 2;
 			uint16 factor = READ_LE_UINT16(animPtr + ((actor->frameToDraw * 8) + 2));
 			uint16 decodeType = factor >> 14;
 			factor &= 0x3fff;
@@ -1188,7 +1189,7 @@ void GameManager::handlePortraitAnimation(Actor *actor) {
 	//but we can't do it here ;)
 	if (actor->resourceIdx >= 0) {
 		if (actor->fixedAnimationFrame == -1) {
-			char *animPtr = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data) + 2;
+			uint8 *animPtr = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data) + 2;
 			uint16 factor = READ_LE_UINT16(animPtr + ((actor->frameToDraw * 8) + 2));
 			uint16 decodeType = factor >> 14;
 			factor &= 0x3fff;
@@ -1430,7 +1431,7 @@ bool GameManager::handleActorWalk(uint8 actorIdx) {
 	}
 	int16 pivotX = actor->pivotX;
 	int16 pivotY = actor->pivotY;
-	char *animData = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data) + 2;
+	uint8 *animData = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data) + 2;
 	int16 frameX = READ_LE_INT16(animData + (actor->frameToDraw * 8) + 4);
 	int16 frameY = READ_LE_INT16(animData + (actor->frameToDraw * 8) + 6);
 	adjustWalkAnimCoords(actor->facingDirection, frameX, frameY);
@@ -1779,7 +1780,7 @@ bool GameManager::copyProtection() {
 	_copyProtectionInstructionsSentence = new char[50];
 	_vm->_txtMgr->getSentence(2, 0x27, _copyProtectionInstructionsSentence);
 	_copyProtectionStarsGraphics = _vm->_archMgr->allocateAndGetFile("A05.PAK", 19);
-	char *tmp = _vm->_archMgr->allocateAndGetFile("A05.PAK", 18);
+	uint8 *tmp = _vm->_archMgr->allocateAndGetFile("A05.PAK", 18);
 	//	uint16 size = 11 * 16 * sizeof(Constellation);
 	memcpy(_copyProtectionsConstellationsData, tmp, 11 * 16 * sizeof(Constellation));
 	delete[] tmp;
@@ -2126,7 +2127,7 @@ void GameManager::handleMenu() {
 	uint8 frameIdx = 0;
 	_numMenusOnScreen++;
 	waitForNoInput();
-	char *video = _vm->_gMgr->lockMainSurface();
+	uint8 *video = _vm->_gMgr->lockMainSurface();
 	_vm->_gMgr->copyVideoBuffer(video, _vm->_gMgr->getBackground());
 	_vm->_gMgr->copyVideoBuffer(video, _vm->_gMgr->getBackbuffer());
 	_vm->_gMgr->unlockMainSurface();
@@ -3051,8 +3052,8 @@ uint8 GameManager::handleSettings() {
 }
 
 uint8 GameManager::handleQuit() {
-	char *prevBB = _vm->_gMgr->getBackbuffer();
-	char *vga = _vm->_gMgr->lockMainSurface();
+	uint8 *prevBB = _vm->_gMgr->getBackbuffer();
+	uint8 *vga = _vm->_gMgr->lockMainSurface();
 	_vm->_gMgr->setBackbuffer(vga);
 	_vm->_gMgr->drawSimpleBox(80, 90, 240, 110, 156);
 	_vm->_gmMgr->updateFontDataAndColor(0x78);
@@ -3096,14 +3097,14 @@ void GameManager::quit() {
 }
 void GameManager::ripScreenToBlack(uint16 color, uint16 effect) {
 	uint16 v0 = 0; // ???? useless but it's there in the original code
-	char *prevBB = _vm->_gMgr->getBackbuffer();
+	uint8 *prevBB = _vm->_gMgr->getBackbuffer();
 	// The "directrix" of the two mirrored parabolas is a line passing through the two points (pa_x,0) and (pb_x,200).
 	// It's not a real directrix, in the mathematical sense. It's just a cheap way to "skew" the parabolas for a better visual effect
 	// In order to avoid a line too steep, pa_x and pb_x are taken randomly in the range [70,250] (instead of the whole x range [0,320])
 	int32 pa_x = 70 + getRandom(180);
 	int32 pb_x = 70 + getRandom(180);
 	for (uint8 i = 0; i < 30; i++) {
-		char *vga = _vm->_gMgr->lockMainSurface();
+		uint8 *vga = _vm->_gMgr->lockMainSurface();
 		_vm->_gMgr->setBackbuffer(vga);
 		for (uint8 j = 0; j < 200; j++) {
 			int16 y = j;
