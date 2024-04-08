@@ -30,15 +30,41 @@ class MouseManager {
 public:
 	MouseManager(CometEngine *vm);
 	~MouseManager();
-	void setCursorsGraphics(uint8 *dataPtr);
+	void loadCursorsGraphics(uint8 *dataPtr, uint8 numCursors);
 	bool isInitialized() {
 		return _initialized;
 	};
 
+	const uint8 *setMouseCursor(int idx, uint8* ptr = nullptr);
+	void setMouseVisibility(uint32 check);
+
 private:
 	CometEngine *_vm;
 	bool _initialized;
+	const uint8* _cursorData;
+	bool _mouseEnabled;
+	/*
+	uint8 _cursorWidth;
+	uint8 _cursorHeight;
+	uint8* _mouseBackgroundBuffer;	//latest video buffer used to draw mouse cursor
+	uint32 _cursorOffset;		//offset of cursor position into the video buffer
+	uint32 _prevCursorOffset;	//previous offset of cursor position into the video buffer 
+	int16 _prevMouseDrawX;
+	int16 _prevMouseDrawY;
+	int16 _mouseDrawX;
+	int16 _mouseDrawY;
+	int16 _mouseX;
+	int16 _mouseY;
+	*/
+	uint8 _tmpCursorBuffer[256];			//temp buffer used to decompress the whole cursor image, when it has to be drawn partially on screen
+	uint8 _customCursorData[256];
+/*
+	uint8 _cursorBackgroundData[256]; // the original portion of graphics under the mouse cursor
+	bool _isFrameDrawing;			  // some sort of "sync" flag, to avoid drawing when not needed/allowed
+*/
 	uint8 *_cursorGraphics;
+	uint8* _loadedCursors[10];
+	/*
 	uint8 *_cursor0;
 	uint8 *_cursor1;
 	uint8 *_cursor2;
@@ -46,6 +72,7 @@ private:
 	uint8 *_cursor4;
 	uint8 *_cursor5;
 	uint8 *_cursor6;
+	*/
 	static const uint8 defaultCursor0[];
 	static const uint8 defaultCursor1[];
 	static const uint8 defaultCursor2[];
@@ -56,6 +83,15 @@ private:
 	static const uint8 defaultCursor7[];
 	static const uint8 defaultCursor8[];
 	static const uint8* defaultCursors[];
+
+	void decompressMouse(const uint8* src);
+	/*
+	void deleteMouseCursor();
+	void saveCursorBackground(uint8* videobuffer);
+	void drawMouse();
+	void mousePreDraw();
+	void mousePostDraw();
+	*/
 };
 } // namespace Cometengine
 #endif
