@@ -302,7 +302,7 @@ void GameManager::loadResPak() {
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 3), //icons
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 4)  //objects
 		);
-		_vm->_moMgr->setCursorsGraphics(_vm->_archMgr->allocateAndGetFile("RES.PAK", 9));
+		_vm->_moMgr->loadCursorsGraphics(_vm->_archMgr->allocateAndGetFile("RES.PAK", 9), 7);
 		updateFontDataAndColor(0);
 		this->_vm->_gMgr->initializePalette(
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 5), //main palette
@@ -310,10 +310,14 @@ void GameManager::loadResPak() {
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 7), //cd intro palette
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 8)  //another palette
 		);
+//		_vm->_moMgr->setMouseCursor(5);
+//		_vm->_moMgr->setMouseVisibility(true);
 	}
 	initAllResources();
 	setPakNumber(_startPakNumber, _startRoom);
 	_vm->_txtMgr->loadSystemAndObjects();
+
+
 }
 void GameManager::initAllResources() {
 	//ok
