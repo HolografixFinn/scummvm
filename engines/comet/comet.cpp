@@ -182,7 +182,9 @@ Common::Error CometEngine::run() {
 	_console = new Console();
 	setDebugger(_console);
 	if (_system->hasFeature(OSystem::Feature::kFeatureVSync)) {
+		_system->beginGFXTransaction();
 		_system->setFeatureState(OSystem::Feature::kFeatureVSync, true);
+		OSystem::TransactionError err = _system->endGFXTransaction();
 	}
 	initManagers();
 
