@@ -23,6 +23,7 @@
 #include "comet/graphicsManager.h"
 #include "comet/comet.h"
 #include "engines/util.h"
+#include"graphics/cursorman.h"
 
 namespace Cometengine {
 /*
@@ -320,6 +321,9 @@ void GraphicsManager::scalePaletteBrightness(uint16 factor) {
 }
 void GraphicsManager::setPaletteEntries(const uint8 *palette, uint8 startEntry, uint16 numEntries) {
 	this->_vm->_system->getPaletteManager()->setPalette(reinterpret_cast<const byte *>(palette), startEntry, numEntries);
+	if (_vm->isCD()) {
+		CursorMan.replaceCursorPalette(palette, startEntry, numEntries);
+	}
 }
 uint8 *GraphicsManager::lockMainSurface() {
 	Graphics::Surface *surf = this->_vm->_system->lockScreen();

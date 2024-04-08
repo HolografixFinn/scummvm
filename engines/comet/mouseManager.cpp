@@ -22,17 +22,28 @@
 
 #include "comet/mouseManager.h"
 #include "comet/comet.h"
+#include"graphics/cursorman.h"
 
 namespace Cometengine {
-	MouseManager::MouseManager(CometEngine* vm) : _vm(vm), _initialized(false), _cursorGraphics(nullptr),
-		_cursor0(nullptr), _cursor1(nullptr), _cursor2(nullptr),
-		_cursor3(nullptr), _cursor4(nullptr), _cursor5(nullptr), _cursor6(nullptr) {
+	MouseManager::MouseManager(CometEngine* vm) : _vm(vm), _initialized(false), _cursorData(defaultCursors[0]),
+		_customCursorData(),
+		//_cursorBackgroundData(), _mouseBackgroundBuffer(nullptr),
+		_tmpCursorBuffer(),
+		//_cursorWidth(16), _cursorHeight(16), _cursorOffset(0), _prevCursorOffset(0),
+		_mouseEnabled(false),
+		//_prevMouseDrawX(0), _prevMouseDrawY(0), _mouseDrawX(0), _mouseDrawY(0), _mouseX(0), _mouseY(0),
+		_cursorGraphics(nullptr),
+		_loadedCursors{nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}
+		//_cursor0(nullptr), _cursor1(nullptr), _cursor2(nullptr),
+		//_cursor3(nullptr), _cursor4(nullptr), _cursor5(nullptr), _cursor6(nullptr)
+		{
 	}
 	MouseManager::~MouseManager() {
 		delete _cursorGraphics;
 	}
-	void MouseManager::setCursorsGraphics(uint8* dataPtr) {
+	void MouseManager::loadCursorsGraphics(uint8* dataPtr, uint8 numCursors) {
 		_cursorGraphics = dataPtr;
+		/*
 		_cursor0 = _vm->_gMgr->getGraphicsData(1, 0, _cursorGraphics);
 		_cursor1 = _vm->_gMgr->getGraphicsData(1, 1, _cursorGraphics);
 		_cursor2 = _vm->_gMgr->getGraphicsData(1, 2, _cursorGraphics);
@@ -40,9 +51,182 @@ namespace Cometengine {
 		_cursor4 = _vm->_gMgr->getGraphicsData(1, 4, _cursorGraphics);
 		_cursor5 = _vm->_gMgr->getGraphicsData(1, 5, _cursorGraphics);
 		_cursor6 = _vm->_gMgr->getGraphicsData(1, 6, _cursorGraphics);
+		*/
+		for (uint8 i = 0; i < numCursors; i++) {
+			_loadedCursors[i] = _vm->_gMgr->getGraphicsData(1, i, _cursorGraphics);
+		}
 		_initialized = true;
 	}
+	const uint8 *MouseManager::setMouseCursor(int idx, uint8* ptr) {
+		const uint8* retVal = _cursorData;
+		if (idx < 0) return retVal;
+		if (idx == 0) {
+			memcpy(_customCursorData, ptr, 0x100);
+			_cursorData = _customCursorData;
+		}
+		else {
+			_cursorData = defaultCursors[idx - 1];
+		}
+		decompressMouse(_cursorData);
+		CursorMan.replaceCursor(_tmpCursorBuffer, 16, 16, 0, 0, 0);
+		/*
+		if (!_mouseEnabled) {
+			_prevMouseDrawX = -1;
+			_prevMouseDrawY = -1;
+		}
+		*/
+		return retVal;
+	}
+	/*
 
+	void MouseManager::deleteMouseCursor() {
+		if (_cursorHeight > 0 && _cursorWidth > 0) {
+			uint8* src = _cursorBackgroundData;
+			uint8* dst = _mouseBackgroundBuffer + _cursorOffset;
+			for (uint8 i = 0; i < _cursorHeight; i++) {
+				memcpy(dst, src, _cursorWidth);
+				dst += _COMET_XRESOLUTION;
+				src += _cursorHeight;
+			}
+			_vm->_gMgr->unlockMainSurface();
+
+		}
+	}
+	*/
+
+	void MouseManager::setMouseVisibility(uint32 check) {
+		CursorMan.showMouse(check);
+		/*
+		if (check == 0) {
+			if (_mouseEnabled == true) {
+				_mouseDrawX = _mouseX;
+				_prevMouseDrawX = 0;
+				_mouseDrawY = _mouseY;
+				_prevMouseDrawY = 0;
+				_prevCursorOffset = 0;
+				_mouseEnabled = false;
+			}
+		}
+		else {
+			if (_mouseEnabled == false) {
+				_mouseEnabled = true;
+				if (_prevCursorOffset == 0) {
+					deleteMouseCursor();
+				}
+			}
+		}
+		*/
+	}
+	void MouseManager::decompressMouse(const uint8* src) {
+		uint8* dst = _tmpCursorBuffer;
+		memset(dst, 0, 256);
+		for (uint8 i = 0; i < 16; i++) {
+			uint8 count = *src++;
+			for (uint8 j = 0; j < count; j++) {
+				uint8 skip = *src++;
+				dst += skip;
+				uint8 numPixs = *src++;
+				numPixs = (numPixs * 4) + *src++;
+				for (uint8 k = 0; k < numPixs; k++) {
+					*dst++ = *src++;
+				}
+				skip = *src++;
+				dst += skip;
+			}
+		}
+
+	}
+	/*
+	void MouseManager::saveCursorBackground(uint8* videobuffer) {
+		_mouseBackgroundBuffer = videobuffer;
+		_cursorOffset = _mouseDrawX + (_mouseDrawY * 320);
+		uint8* src = _mouseBackgroundBuffer + _cursorOffset;
+		uint8* dst = _cursorBackgroundData;
+		if (_cursorWidth != 0 && _cursorHeight != 0) {
+			for (uint8 i = 0; i < _cursorHeight; i++) {
+				memcpy(dst, src, _cursorWidth);
+				dst += _cursorWidth;
+				src += _COMET_XRESOLUTION;
+			}
+		}
+	}
+	void MouseManager::drawMouse() {
+		if (_cursorWidth != 0 && _cursorHeight != 0) {
+			if (_cursorWidth >= 16) {
+				const uint8* src = _cursorData;
+				uint8* dst = _mouseBackgroundBuffer + _cursorOffset;
+				for (uint8 i = 0; i < _cursorHeight; i++) {
+					uint8 count = *src++;
+					for (uint8 j = 0; j < count; j++) {
+						uint8 skip = *src++;
+						dst += skip;
+						uint8 numPixs = *src++;
+						numPixs = (numPixs * 4) + *src++;
+						for (uint8 k = 0; k < numPixs; k++) {
+							*dst++ = *src++;
+						}
+						skip = *src++;
+						dst += skip;
+						dst += _COMET_XRESOLUTION - 16;
+					}
+				}
+
+			}
+			else {
+				// first: we draw the whole cursor into a temp buffer
+				const uint8* src = _cursorData;
+				uint8* dst = _tmpCursorBuffer;
+				for (uint8 i = 0; i < _cursorHeight; i++) {
+					uint8 count = *src++;
+					for (uint8 j = 0; j < count; j++) {
+						uint8 skip = *src++;
+						for (uint8 k = 0; k < skip; k++) {
+							*dst++ = 0;
+						}
+						uint8 numPixs = *src++;
+						numPixs = (numPixs * 4) + *src++;
+						for (uint8 k = 0; k < numPixs; k++) {
+							*dst++ = *src++;
+						}
+						skip = *src++;
+						for (uint8 k = 0; k < skip; k++) {
+							*dst++ = 0;
+						}
+					}
+				}
+				src = _tmpCursorBuffer;
+				dst = _mouseBackgroundBuffer + _cursorOffset;
+				for (uint8 i = 0; i < _cursorHeight; i++) {
+					for (uint8 j = 0; j < _cursorWidth; j++) {
+						uint8 pix = *src++;
+						if (pix != 0) {
+							*dst = pix;
+						}
+						dst++;
+					}
+					dst += _COMET_XRESOLUTION - _cursorWidth;
+					src += 16 - _cursorWidth;
+				}
+
+			}
+		}
+	}
+	void MouseManager::mousePreDraw() {
+		_cursorWidth = _cursorHeight = 16;
+		if (_mouseDrawX > (320 - 16)) {
+			_cursorWidth -= _mouseDrawX - (320 - 16);
+		}
+		if (_mouseDrawY > (200 - 16)) {
+			_cursorHeight -= _mouseDrawY - (200 - 16);
+		}
+		saveCursorBackground(_vm->_gMgr->_videoBackbuffer);
+		drawMouse();
+
+	}
+	void MouseManager::mousePostDraw() {
+
+	}
+	*/
 	const uint8 MouseManager::defaultCursor0[] = {
 		0x01,
 		0x00,
