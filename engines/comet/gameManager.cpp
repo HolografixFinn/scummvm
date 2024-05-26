@@ -246,6 +246,9 @@ bool GameManager::updateInputStatus() {
 			break;
 		}
 	}
+	if (_vm->isCD()) {
+		_vm->_moMgr->updateMouseStatus();
+	}
 	return true;
 }
 void GameManager::handleSpecialKey(uint32 idx, bool pressed) {
@@ -2266,10 +2269,20 @@ uint8 GameManager::chooseObject() {
 	uint16 firstVisibleIdx = 0;
 	uint32 delayCounter = 0;
 	uint16 frameIdx = 0;
+	int16 mouseTarget = 0; //only for CD
+	Common::KeyCode operation = Common::KEYCODE_INVALID; //only for CD
+
 	_numMenusOnScreen++;
+	if (_vm->isCD()) {
+		_vm->_audioMgr->stopDigi();
+		_vm->_moMgr->setMouseVisibility(false);
+	}
 	if (_numMenusOnScreen == 1) {
 		_vm->_gMgr->copyVideoBuffer(_vm->_gMgr->lockMainSurface(), _vm->_gMgr->getBackground());
 		_vm->_gMgr->unlockMainSurface();
+	}
+	if (_vm->isCD()) {
+		_vm->_moMgr->setMouseVisibility(true);
 	}
 	waitForNoInput();
 	for (uint16 i = 0; i < 255; i++) {
@@ -2310,8 +2323,52 @@ uint8 GameManager::chooseObject() {
 				status = 2;
 				break;
 			}
+			if (_vm->isCD()) {
+				uint16 numTargets = (objCount - firstVisibleIdx) >= 10 ? 10 : objCount - firstVisibleIdx;
+				mouseTarget = _vm->_moMgr->getCurrentTarget(MouseManager::Targets::OBJSMENU, numTargets, -1);
+				if (mouseTarget >= 0) {
+					selectedIdx = firstVisibleIdx + mouseTarget;
+				}
+
+			}
 			_vm->_gMgr->drawObjectsWindow(objCount, buffer, firstVisibleIdx, selectedIdx, frameIdx);
 			_vm->_gMgr->paintBackbuffer_mouse();
+			if (_vm->isCD()) {
+				if (_movementStatus == 0 && (!_vm->_moMgr->getLeftBut()) && (!_vm->_moMgr->getRightBut()) && _lastPressedKey == Common::KEYCODE_INVALID) {
+					continue;
+				}
+				operation = Common::KEYCODE_INVALID;
+				if (_vm->_moMgr->getRightBut()) {
+					operation = Common::KEYCODE_ESCAPE;
+				}
+				else if (_vm->_moMgr->getLeftBut()) {
+					switch (mouseTarget) {
+					case -1:break;
+					case -3:
+						if (selectedIdx > firstVisibleIdx) {
+							selectedIdx--;
+						}
+						else {
+							if (firstVisibleIdx > 0) {
+								firstVisibleIdx--;
+								selectedIdx--;
+							}
+						}
+						break;
+					case -2:
+						if ((selectedIdx - firstVisibleIdx) < (numItemsPerPage - 1) && (objCount - 1) > selectedIdx) {
+							selectedIdx++;
+						}
+						else if((firstVisibleIdx+numItemsPerPage)<objCount){
+							firstVisibleIdx++;
+							selectedIdx++;
+
+						}
+						break;
+					default: operation = Common::KEYCODE_u; break;
+					}
+				}
+			}
 			if (_movementStatus & kDownFlag) {
 				if (selectedIdx - firstVisibleIdx >= numItemsPerPage - 1 || objCount - 1 <= selectedIdx) {
 					if (firstVisibleIdx + numItemsPerPage < objCount) {
@@ -2319,6 +2376,11 @@ uint8 GameManager::chooseObject() {
 						selectedIdx++;
 					}
 				} else {
+					if (_vm->isCD() && mouseTarget >= 0 && (firstVisibleIdx + mouseTarget) != selectedIdx) {
+						_vm->_moMgr->warpMouseOffset(0,
+							_vm->_moMgr->getTarget(MouseManager::Targets::OBJSMENU, selectedIdx + 3).top - _vm->_moMgr->getTarget(MouseManager::Targets::OBJSMENU, selectedIdx+2).top
+						);
+					}
 					selectedIdx++;
 				}
 			}
@@ -2329,13 +2391,21 @@ uint8 GameManager::chooseObject() {
 						selectedIdx--;
 					}
 				} else {
+					if (_vm->isCD() && mouseTarget >= 0 && (firstVisibleIdx + mouseTarget) != selectedIdx) {
+						_vm->_moMgr->warpMouseOffset(0,
+							-1*(_vm->_moMgr->getTarget(MouseManager::Targets::OBJSMENU, selectedIdx + 3).top - _vm->_moMgr->getTarget(MouseManager::Targets::OBJSMENU, selectedIdx + 2).top)
+						);
+					}
 					selectedIdx--;
 				}
 			}
-			if (_lastPressedKey == Common::KeyCode::KEYCODE_ESCAPE) {
+			if (operation == Common::KEYCODE_INVALID) {
+				operation = _lastPressedKey;
+			}
+			if (operation == Common::KeyCode::KEYCODE_ESCAPE) {
 				status = 2;
 			}
-			if (_lastPressedKey == Common::KeyCode::KEYCODE_KP_ENTER || _lastPressedKey == Common::KeyCode::KEYCODE_RETURN) {
+			if (operation == Common::KeyCode::KEYCODE_KP_ENTER || operation == Common::KeyCode::KEYCODE_RETURN) {
 				for (uint16 i = 0; i < 255; i++) {
 					if (_vm->_gameState.objectsFlags[i] == 2) {
 						_vm->_gameState.objectsFlags[i] = 1;
@@ -2344,7 +2414,7 @@ uint8 GameManager::chooseObject() {
 					status = 1;
 				}
 			}
-			if (_lastPressedKey == Common::KeyCode::KEYCODE_u) {
+			if (operation == Common::KeyCode::KEYCODE_u) {
 				for (uint16 i = 0; i < 255; i++) {
 					if (_vm->_gameState.objectsFlags[i] == 2) {
 						_vm->_gameState.objectsFlags[i] = 1;
@@ -2393,6 +2463,9 @@ uint8 GameManager::handleDiary() {
 	uint16 realChapter = 0;
 	int16 maxPage = _vm->_gameState.gameVars[1];
 	int16 currPage = maxPage;
+	int16 prevPage = -1; //CD only
+	int16 mouseTarget = -1; //CD only
+	Common::KeyCode operation = Common::KEYCODE_INVALID;
 	_numMenusOnScreen++;
 	_vm->_gMgr->diaryFade(false, currPage, maxPage);
 	if (_vm->isCD()) {
@@ -2408,23 +2481,100 @@ uint8 GameManager::handleDiary() {
 		if (_vm->isQuitRequested()) {
 			return 0;
 		}
-		if (_lastPressedKey == Common::KeyCode::KEYCODE_RETURN || _lastPressedKey == Common::KeyCode::KEYCODE_KP_ENTER) {
+		if (_vm->isCD() && _vm->_gameState.speechOptions != 0) {
+			if (currPage != prevPage) {
+				if (currPage == 0) {
+					_vm->_spMgr->stopSpeech();
+				}
+				else {
+					_vm->_spMgr->startSpeech(currPage);
+				}
+			}
+			else {
+				prevPage = currPage;
+				_vm->_spMgr->handleSpeech();
+			}
+		}
+		operation = Common::KEYCODE_INVALID;
+		if (_vm->isCD()) {
+			mouseTarget = _vm->_moMgr->getCurrentTarget(MouseManager::Targets::DIARY, 2, -1);
+			switch (mouseTarget) {
+			case -1:
+				_vm->_moMgr->setMouseCursor(1);
+				break;
+			case 0:
+				_vm->_moMgr->setMouseCursor(0, _vm->_moMgr->loadedCursors[3]);
+				break;
+			case 1:
+				_vm->_moMgr->setMouseCursor(0, _vm->_moMgr->loadedCursors[4]);
+				break;
+			}
+			_vm->_moMgr->setMouseVisibility(true);
+			if (_movementStatus == 0 && (!_vm->_moMgr->getLeftBut()) && (!_vm->_moMgr->getRightBut()) && _lastPressedKey == Common::KEYCODE_INVALID) {
+				continue;
+			}
+			if (_vm->_moMgr->getRightBut()) {
+				operation = Common::KEYCODE_ESCAPE;
+			}
+			else if (_vm->_moMgr->getLeftBut()) {
+				if (mouseTarget != -1) {
+					switch (mouseTarget) {
+					case 0:
+						if(currPage > 0) {
+							_vm->_audioMgr->stopDigi();
+							_vm->_gMgr->diaryFade(true, currPage, maxPage);
+							_vm->_gMgr->drawDiaryPagesAnimation(false);
+							currPage--;
+						}
+						break;
+					case 1:
+						if (currPage < maxPage) {
+							_vm->_gMgr->diaryFade(true, currPage, maxPage);
+							_vm->_gMgr->drawDiaryPagesAnimation(true);
+							currPage++;
+						}
+						break;
+					}
+					_vm->_gMgr->diaryFade(false, currPage, maxPage);
+
+				}
+
+			}
+
+
+		}
+		if (operation == Common::KEYCODE_INVALID) {
+			operation = _lastPressedKey;
+		}
+		if (operation == Common::KeyCode::KEYCODE_RETURN || operation == Common::KeyCode::KEYCODE_KP_ENTER) {
 			retVal = 1;
 		}
-		if (_lastPressedKey == Common::KeyCode::KEYCODE_ESCAPE) {
+		if (operation == Common::KeyCode::KEYCODE_ESCAPE) {
 			retVal = 2;
 		}
-		if ((_movementStatus & kRightFlag) && currPage < maxPage) {
-			_vm->_gMgr->diaryFade(true, currPage, maxPage);
-			_vm->_gMgr->drawDiaryPagesAnimation(true);
-			currPage++;
-			_vm->_gMgr->diaryFade(false, currPage, maxPage);
+		if (_movementStatus & kRightFlag ) {
+			if (_vm->isCD() && mouseTarget == 0) {
+				_vm->_moMgr->warpMouseOffset(-114, 0);
+			}
+			if (currPage < maxPage) {
+				if (_vm->isCD()) { _vm->_audioMgr->stopDigi(); }
+				_vm->_gMgr->diaryFade(true, currPage, maxPage);
+				_vm->_gMgr->drawDiaryPagesAnimation(true);
+				currPage++;
+				_vm->_gMgr->diaryFade(false, currPage, maxPage);
+			}
 		}
-		if ((_movementStatus & kLeftFlag) && currPage > 0) {
-			_vm->_gMgr->diaryFade(true, currPage, maxPage);
-			_vm->_gMgr->drawDiaryPagesAnimation(false);
-			currPage--;
-			_vm->_gMgr->diaryFade(false, currPage, maxPage);
+		if (_movementStatus & kLeftFlag) {
+			if (_vm->isCD() && mouseTarget == 1) {
+				_vm->_moMgr->warpMouseOffset(114, 0);
+			}
+			if (currPage > 0) {
+				if (_vm->isCD()) { _vm->_audioMgr->stopDigi(); }
+				_vm->_gMgr->diaryFade(true, currPage, maxPage);
+				_vm->_gMgr->drawDiaryPagesAnimation(false);
+				currPage--;
+				_vm->_gMgr->diaryFade(false, currPage, maxPage);
+			}
 		}
 		waitForNoInput();
 	}
@@ -2445,25 +2595,67 @@ uint8 GameManager::handleDiary() {
 	return retVal;
 }
 uint8 GameManager::handleDiskMenu() {
-	uint8 selectedItem = 0;
+	int16 selectedItem = 0;
 	uint8 retVal = 0;
+	int16 mouseTarget = 0;
+	Common::KeyCode operation = Common::KEYCODE_INVALID;
 	selectedItem = _lastDiskMenuSelectedItem;
 	_numMenusOnScreen++;
+	if (_vm->isCD()) {
+		_vm->_moMgr->setMouseVisibility(false);
+	}
 	if (_numMenusOnScreen == 1) {
 		_vm->_gMgr->copyVideoBuffer(_vm->_gMgr->lockMainSurface(), _vm->_gMgr->getBackground());
 		_vm->_gMgr->unlockMainSurface();
+	}
+	if (_vm->isCD()) {
+		_vm->_moMgr->setMouseVisibility(true);
 	}
 	while (waitForNoInput(), retVal == 0) {
 		updateInputStatus();
 		if (_vm->isQuitRequested()) {
 			return 0;
 		}
+		if (_vm->isCD()) {
+			mouseTarget = _vm->_moMgr->getCurrentTarget(MouseManager::Targets::DISKMENU, 4, -1);
+			if (mouseTarget != -1) {
+				selectedItem = mouseTarget;
+			}
+		}
 		_vm->_gMgr->drawDiskMenu(selectedItem);
 		_vm->_gMgr->paintBackbuffer_mouse();
+		if (_vm->isCD()) {
+			if (_movementStatus == 0 && (!_vm->_moMgr->getLeftBut()) && (!_vm->_moMgr->getRightBut()) && _lastPressedKey == Common::KEYCODE_INVALID) {
+				continue;
+			}
+
+			if (_vm->_moMgr->getRightBut()) {
+				operation = Common::KEYCODE_ESCAPE;
+			}
+			else if (_vm->_moMgr->getLeftBut()) {
+				switch (mouseTarget) {
+				case -1:break;
+				case 0: operation = Common::KEYCODE_s; break;
+				case 1: operation = Common::KEYCODE_l; break;
+				case 2: operation = Common::KEYCODE_t; break;
+				case 3: operation = Common::KEYCODE_x; break;
+				}
+			}
+		}
 		if (_movementStatus & kDownFlag) {
 			if (selectedItem < 3) {
+				if (_vm->isCD() && mouseTarget == selectedItem) {
+					_vm->_moMgr->warpMouseOffset(0,
+						_vm->_moMgr->getTarget(MouseManager::Targets::DISKMENU, selectedItem+1).top - _vm->_moMgr->getTarget(MouseManager::Targets::DISKMENU, selectedItem).top
+						);
+				}
 				selectedItem++;
 			} else {
+				if (_vm->isCD() && mouseTarget == selectedItem) {
+					_vm->_moMgr->warpMouseOffset(0,
+						-1*(_vm->_moMgr->getTarget(MouseManager::Targets::DISKMENU, selectedItem).top - _vm->_moMgr->getTarget(MouseManager::Targets::DISKMENU, 0).top)
+					);
+				}
 				selectedItem = 0;
 			}
 		}
@@ -2471,10 +2663,18 @@ uint8 GameManager::handleDiskMenu() {
 			if (selectedItem == 0) {
 				selectedItem = 3;
 			} else {
+				if (_vm->isCD() && mouseTarget == selectedItem) {
+					_vm->_moMgr->warpMouseOffset(0,
+						_vm->_moMgr->getTarget(MouseManager::Targets::DISKMENU, 3).top - _vm->_moMgr->getTarget(MouseManager::Targets::DISKMENU, 0).top
+					);
+				}
 				selectedItem--;
 			}
 		}
-		switch (_lastPressedKey) {
+		if (operation == Common::KEYCODE_INVALID) {
+			operation = _lastPressedKey;
+		}
+		switch (operation) {
 		case Common::KeyCode::KEYCODE_ESCAPE:
 			retVal = 2;
 			break;
