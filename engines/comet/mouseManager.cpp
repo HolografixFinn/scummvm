@@ -25,7 +25,8 @@
 #include"graphics/cursorman.h"
 
 namespace Cometengine {
-	MouseManager::MouseManager(CometEngine* vm) : _vm(vm), _initialized(false), _cursorData(defaultCursors[0]),
+	MouseManager::MouseManager(CometEngine* vm) : _vm(vm), _initialized(false), _evtMgr(_vm->_system->getEventManager()),
+		_cursorData(defaultCursors[0]),
 		_customCursorData(),
 		//_cursorBackgroundData(), _mouseBackgroundBuffer(nullptr),
 		_tmpCursorBuffer(),
@@ -33,7 +34,7 @@ namespace Cometengine {
 		_mouseEnabled(false),
 		//_prevMouseDrawX(0), _prevMouseDrawY(0), _mouseDrawX(0), _mouseDrawY(0), _mouseX(0), _mouseY(0),
 		_cursorGraphics(nullptr),
-		_loadedCursors{nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}
+		loadedCursors{nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}
 		//_cursor0(nullptr), _cursor1(nullptr), _cursor2(nullptr),
 		//_cursor3(nullptr), _cursor4(nullptr), _cursor5(nullptr), _cursor6(nullptr)
 		{
@@ -41,6 +42,20 @@ namespace Cometengine {
 	MouseManager::~MouseManager() {
 		delete _cursorGraphics;
 	}
+	bool MouseManager::updateMouseStatus() {
+		_currPos = _evtMgr->getMousePos();
+		int tmp = _evtMgr->getButtonState();
+		_leftButStatus = _rightButStatus = false;
+		if (tmp & 0x01) {
+			_leftButStatus = true;
+		}
+		if (tmp & 0x02) {
+			_rightButStatus = true;
+		}
+		return true;
+	}
+	
+
 	void MouseManager::loadCursorsGraphics(uint8* dataPtr, uint8 numCursors) {
 		_cursorGraphics = dataPtr;
 		/*
@@ -53,11 +68,11 @@ namespace Cometengine {
 		_cursor6 = _vm->_gMgr->getGraphicsData(1, 6, _cursorGraphics);
 		*/
 		for (uint8 i = 0; i < numCursors; i++) {
-			_loadedCursors[i] = _vm->_gMgr->getGraphicsData(1, i, _cursorGraphics);
+			loadedCursors[i] = _vm->_gMgr->getGraphicsData(1, i, _cursorGraphics)+2;
 		}
 		_initialized = true;
 	}
-	const uint8 *MouseManager::setMouseCursor(int idx, uint8* ptr) {
+	const uint8 *MouseManager::setMouseCursor(int idx, const uint8* ptr) {
 		const uint8* retVal = _cursorData;
 		if (idx < 0) return retVal;
 		if (idx == 0) {
@@ -77,6 +92,13 @@ namespace Cometengine {
 		*/
 		return retVal;
 	}
+	void MouseManager::warpMouse(int16 x, int16 y) {
+		_vm->_system->warpMouse(x >= 0 ? x : _currPos.x, y >= 0 ? y : _currPos.y);
+	}
+	void MouseManager::warpMouseOffset(int16 x, int16 y) {
+		_vm->_system->warpMouse(_currPos.x+x, _currPos.y+y);
+	}
+
 	/*
 
 	void MouseManager::deleteMouseCursor() {
@@ -119,23 +141,42 @@ namespace Cometengine {
 	}
 	void MouseManager::decompressMouse(const uint8* src) {
 		uint8* dst = _tmpCursorBuffer;
+		uint8 skip = 0;
 		memset(dst, 0, 256);
 		for (uint8 i = 0; i < 16; i++) {
 			uint8 count = *src++;
 			for (uint8 j = 0; j < count; j++) {
-				uint8 skip = *src++;
+				skip = *src++;
 				dst += skip;
 				uint8 numPixs = *src++;
 				numPixs = (numPixs * 4) + *src++;
 				for (uint8 k = 0; k < numPixs; k++) {
 					*dst++ = *src++;
 				}
-				skip = *src++;
-				dst += skip;
 			}
+			skip = *src++;
+			dst += skip;
 		}
+		
 
 	}
+	int16 MouseManager::getCurrentTarget(Targets tag, uint8 numElems, int16 notFound) {
+
+		const mouseTarget* list = MouseManager::mouseTargets[static_cast<uint8>(tag)];
+		for (uint8 i = 0; i < numElems; i++) {
+			if (_currPos.x >= list[i].left && _currPos.x <= list[i].right && _currPos.y >= list[i].top && _currPos.y <= list[i].bottom) {
+				return list[i].ID;
+			}
+		}
+		return notFound;
+	}
+	MouseManager::mouseTarget MouseManager::getTarget(Targets tag, uint16 idx) {
+
+		const mouseTarget* list = MouseManager::mouseTargets[static_cast<uint8>(tag)];
+		return list[idx];
+
+	}
+
 	/*
 	void MouseManager::saveCursorBackground(uint8* videobuffer) {
 		_mouseBackgroundBuffer = videobuffer;
@@ -1849,5 +1890,76 @@ namespace Cometengine {
 	const uint8* MouseManager::defaultCursors[] = {
 		MouseManager::defaultCursor0, MouseManager::defaultCursor1, MouseManager::defaultCursor2, MouseManager::defaultCursor3,
 		MouseManager::defaultCursor4, MouseManager::defaultCursor5, MouseManager::defaultCursor6, MouseManager::defaultCursor7, MouseManager::defaultCursor8
+	};
+
+	const MouseManager::mouseTarget MouseManager::mainMenuMouseTarget[] = {
+		{6,4,0x29,0x22,0},
+		{0x33,4,0x56,0x22,1},
+		{0x60,4,0x83,0x22,2},
+		{0x8d,4,0xb0,0x22,3},
+		{0xba,4,0xd0,0x22,4},
+		{0xe7,4,0x10a,0x22,5},
+		{0x114,4,0x137,0x22,6}
+	};
+	const MouseManager::mouseTarget MouseManager::diskMenuMouseTarget[] = {
+		{0x88,0x40,0xb8,0x50,0},
+		{0x88,0x57,0xb8,0x67,1},
+		{0x88,0x6e,0xb8,0x7e,2},
+		{0x88,0x85,0xb8,0x95,3}
+	};
+	const MouseManager::mouseTarget MouseManager::objsMenuMouseTarget[] = {
+		{0xa0,0xb6,0xaa,0xbe,-2},
+		{0xa0,0x35,0xaa,0x3d,-3},
+		{0x4a,0x3e,0xfd,0x49,0},
+		{0x4a,0x4a,0xfd,0x55,1},
+		{0x4a,0x56,0xfd,0x61,2},
+		{0x4a,0x62,0xfd,0x6d,3},
+		{0x4a,0x6e,0xfd,0x79,4},
+		{0x4a,0x7a,0xfd,0x85,5},
+		{0x4a,0x86,0xfd,0x91,6},
+		{0x4a,0x92,0xfd,0x9d,7},
+		{0x4a,0x9e,0xfd,0xa9,8},
+		{0x4a,0xaa,0xfd,0xb5,9}
+	};
+	const MouseManager::mouseTarget MouseManager::filesMenuMouseTarget[] = {
+		{0x5d,0x3e,0xe8,0x49,0},
+		{0x5d,0x4a,0xe8,0x55,1},
+		{0x5d,0x56,0xe8,0x61,2},
+		{0x5d,0x62,0xe8,0x6d,3},
+		{0x5d,0x6e,0xe8,0x79,4},
+		{0x5d,0x7a,0xe8,0x85,5},
+		{0x5d,0x86,0xe8,0x91,6},
+		{0x5d,0x92,0xe8,0x9d,7},
+		{0x5d,0x9e,0xe8,0xa9,8},
+		{0x5d,0xaa,0xe8,0xb5,9},
+	};
+	const MouseManager::mouseTarget MouseManager::diaryMouseTarget[] = {
+		{0x36,0x2e,0xa6,0xbd,0},
+		{0xa7,0x2e,0x117,0xbd,1},
+	};
+	const MouseManager::mouseTarget MouseManager::optionsMenuMouseTarget[] = {
+		{0x7f,0x40,0xbd,0x4f,0},
+		{0x7f,0x54,0xbd,0x63,1},
+		{0x7f,0x68,0xa4,0x77,2},
+		{0x7f,0x7c,0xbd,0x88,3},
+		{0x7f,0x90,0x8e,0x9f,4},
+		{0x7f,0xa4,0x8e,0xb3,5},
+		{0x7f,0xa5,0xc7,0xb2,6},
+		{0x6a,0x40,0x79,0x4f,0x1e},
+		{0x6a,0x54,0x79,0x63,0x1f},
+		{0x6a,0x68,0x79,0x77,0x20},
+		{0x6a,0x7c,0x79,0x88,0x21},
+		{0x6a,0x90,0x79,0x9f,0x22},
+		{0x6a,0xa4,0x79,0xb3,0x23},
+		{0xac,0xa5,0xc7,0xb2,6},
+	};
+
+	const MouseManager::mouseTarget* MouseManager::mouseTargets[] = {
+		MouseManager::mainMenuMouseTarget,
+		MouseManager::diskMenuMouseTarget,
+		MouseManager::objsMenuMouseTarget,
+		MouseManager::filesMenuMouseTarget,
+		MouseManager::diaryMouseTarget,
+		MouseManager::optionsMenuMouseTarget
 	};
 } // namespace Cometengine
