@@ -24,6 +24,7 @@
 #include "comet/comet.h"
 #include "engines/util.h"
 #include"graphics/cursorman.h"
+#include"graphics/paletteman.h"
 
 namespace Cometengine {
 /*
