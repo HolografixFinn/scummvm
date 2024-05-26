@@ -21,6 +21,8 @@
 */
 
 #include "common/scummsys.h"
+#include "common/events.h"
+
 #ifndef COMET_MOUSEMANAGER_H
 #define COMET_MOUSEMANAGER_H
 
@@ -35,14 +37,55 @@ public:
 		return _initialized;
 	};
 
-	const uint8 *setMouseCursor(int idx, uint8* ptr = nullptr);
-	void setMouseVisibility(uint32 check);
+	const uint8 *setMouseCursor(int idx, const uint8* ptr = nullptr);
+	uint8* loadedCursors[10];
+	static const uint8* defaultCursors[];
 
+	void setMouseVisibility(uint32 check);
+	bool updateMouseStatus();
+
+	struct mouseTarget {
+		uint16 left;
+		uint16 top;
+		uint16 right;
+		uint16 bottom;
+		int16 ID;
+	};
+	enum class Targets : uint8 {
+		MAINMENU = 0,
+		DISKMENU,
+		OBJSMENU,
+		FILESMENU,
+		DIARY,
+		OPTIONSMENU
+	};
+	int16 getCurrentTarget(Targets tag, uint8 numElems, int16 notFound);
+	mouseTarget getTarget(Targets tag, uint16 idx);
+	int16 getCurrX();
+	int16 getCurrY();
+	bool getLeftBut();
+	bool getRightBut();
+	void warpMouse(int16 x, int16 y);
+	void warpMouseOffset(int16 x, int16 y);
 private:
+	static const mouseTarget mainMenuMouseTarget[];
+	static const mouseTarget diskMenuMouseTarget[];
+	static const mouseTarget objsMenuMouseTarget[];
+	static const mouseTarget filesMenuMouseTarget[];
+	static const mouseTarget diaryMouseTarget[];
+	static const mouseTarget optionsMenuMouseTarget[];
+
+	static const mouseTarget *mouseTargets[];
+
 	CometEngine *_vm;
+	Common::EventManager* _evtMgr;
 	bool _initialized;
 	const uint8* _cursorData;
 	bool _mouseEnabled;
+	Common::Point _currPos;
+	bool _leftButStatus;
+	bool _rightButStatus;
+
 	/*
 	uint8 _cursorWidth;
 	uint8 _cursorHeight;
@@ -63,7 +106,6 @@ private:
 	bool _isFrameDrawing;			  // some sort of "sync" flag, to avoid drawing when not needed/allowed
 */
 	uint8 *_cursorGraphics;
-	uint8* _loadedCursors[10];
 	/*
 	uint8 *_cursor0;
 	uint8 *_cursor1;
@@ -82,7 +124,6 @@ private:
 	static const uint8 defaultCursor6[];
 	static const uint8 defaultCursor7[];
 	static const uint8 defaultCursor8[];
-	static const uint8* defaultCursors[];
 
 	void decompressMouse(const uint8* src);
 	/*
@@ -93,5 +134,17 @@ private:
 	void mousePostDraw();
 	*/
 };
+inline int16 MouseManager::getCurrX() {
+	return _currPos.x;
+}
+inline int16 MouseManager::getCurrY() {
+	return _currPos.y;
+}
+inline bool MouseManager::getLeftBut() {
+	return _leftButStatus;
+}
+inline bool MouseManager::getRightBut() {
+	return _rightButStatus;
+}
 } // namespace Cometengine
 #endif
