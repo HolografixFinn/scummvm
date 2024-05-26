@@ -187,7 +187,10 @@ Common::Error CometEngine::run() {
 		OSystem::TransactionError err = _system->endGFXTransaction();
 	}
 	initManagers();
-
+	if (isCD()) {
+//		_moMgr->setMouseVisibility(true);	// ??? why this?
+		_moMgr->setMouseVisibility(false);
+	}
 	while (!_isEscPressed) {
 		_gmMgr->updateInputStatus();
 		if (isQuitRequested()) {
@@ -239,7 +242,7 @@ Common::Error CometEngine::run() {
 	}
 	_gMgr->clearBackbuffer();
 	_gMgr->paintBackbuffer_mouse();
-
+	_moMgr->setMouseVisibility(true);
 	while (true) {
 		_gmMgr->updateInputStatus();
 		if (isQuitRequested()) {
