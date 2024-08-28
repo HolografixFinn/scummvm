@@ -187,7 +187,9 @@ Common::Error CometEngine::run() {
 		OSystem::TransactionError err = _system->endGFXTransaction();
 	}
 	initManagers();
+	uint16_t skullPuzzleVarIdx = 0x9d;
 	if (isCD()) {
+		skullPuzzleVarIdx = 0x09;
 //		_moMgr->setMouseVisibility(true);	// ??? why this?
 		_moMgr->setMouseVisibility(false);
 	}
@@ -262,16 +264,17 @@ Common::Error CometEngine::run() {
 			_gameState.isAlternatePaletteActive = 0;
 		}
 
-		if (_gameState.gameVars[0x9d] == 1) {
+		if (_gameState.gameVars[skullPuzzleVarIdx] == 1) {
 			_gMgr->copyVideoBuffer(_gMgr->lockMainSurface(), _gMgr->getBackground());
 			_gMgr->unlockMainSurface();
-			_gameState.gameVars[0x9d] = _gmMgr->handleSkullPuzzle();
+			_gameState.gameVars[skullPuzzleVarIdx] = _gmMgr->handleSkullPuzzle();
 			_gMgr->loadStageBackground();
 			if (isQuitRequested()) {
 				break;
 			}
 		}
-		if (_gmMgr->_lastPressedKey == Common::KeyCode::KEYCODE_RETURN || _gmMgr->_lastPressedKey == Common::KeyCode::KEYCODE_KP_ENTER) {
+		if (_gmMgr->_lastPressedKey == Common::KeyCode::KEYCODE_RETURN || _gmMgr->_lastPressedKey == Common::KeyCode::KEYCODE_KP_ENTER
+			|| (isCD() && _moMgr->getRightBut() && _txtMgr->isTextDisplayed())) {
 			_gmMgr->enterPressed();
 		}
 		if (_gmMgr->_lastPressedKey == Common::KeyCode::KEYCODE_p) {
