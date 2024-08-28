@@ -6,7 +6,7 @@
 namespace Cometengine {
 struct gameState {
 	gameState();
-	void serialize(CometXorSerializer &s);
+	void serialize(CometXorSerializer &s, bool cdVersion=false);
 	void serializeActor(Actor &actor, CometXorSerializer &s);
 	void serializeRoomExit(RoomExit &actor, CometXorSerializer &s);
 	void serializeRoomScript(RoomScript &actor, CometXorSerializer &s);

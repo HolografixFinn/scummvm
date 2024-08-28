@@ -57,7 +57,9 @@ public:
 		OBJSMENU,
 		FILESMENU,
 		DIARY,
-		OPTIONSMENU
+		OPTIONSMENU,
+		SKULLPUZZLE,
+		QUITMENU
 	};
 	int16 getCurrentTarget(Targets tag, uint8 numElems, int16 notFound);
 	mouseTarget getTarget(Targets tag, uint16 idx);
@@ -67,6 +69,7 @@ public:
 	bool getRightBut();
 	void warpMouse(int16 x, int16 y);
 	void warpMouseOffset(int16 x, int16 y);
+	uint32 getButStatus();
 private:
 	static const mouseTarget mainMenuMouseTarget[];
 	static const mouseTarget diskMenuMouseTarget[];
@@ -74,6 +77,8 @@ private:
 	static const mouseTarget filesMenuMouseTarget[];
 	static const mouseTarget diaryMouseTarget[];
 	static const mouseTarget optionsMenuMouseTarget[];
+	static const mouseTarget skullMouseTarget[];
+	static const mouseTarget quitMenuMouseTarget[];
 
 	static const mouseTarget *mouseTargets[];
 

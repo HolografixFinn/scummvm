@@ -3170,29 +3170,65 @@ void GraphicsManager::drawFrameToScreen() {
 		}
 	}
 	if (_isPaintWithEffect && _fadeStatus == 0 && _vm->_gmMgr->_roomZoomLevel == 0) {
+		if (_vm->isCD()) {
+			_vm->_moMgr->setMouseVisibility(false);
+		}
 		paintBackbuffer_withEffect();
 		//		warning("Effect");
+		if (_vm->isCD()) {
+			_vm->_moMgr->setMouseVisibility(true);
+		}
 	}
 	if (_vm->isCD()) {
 		callCapFPS();
 	}
 	if (_fadeStatus == 1) {
+		if (_vm->isCD()) {
+			_vm->_moMgr->setMouseVisibility(false);
+		}
 		dealFadeIn();
+		if (_vm->isCD()) {
+			_vm->_moMgr->setMouseVisibility(true);
+		}
 		return;
 	}
 	if (_fadeStatus == 2) {
+		if (_vm->isCD()) {
+			_vm->_moMgr->setMouseVisibility(false);
+		}
 		dealFadeOut();
+		if (_vm->isCD()) {
+			_vm->_moMgr->setMouseVisibility(true);
+		}
 		return;
 	}
 	if (_vm->_gmMgr->_roomZoomLevel == 0) {
 		paintBackbuffer();
 	} else if (_vm->_gmMgr->_roomZoomLevel == 1) {
+		if (_vm->isCD()) {
+			_vm->_moMgr->setMouseVisibility(false);
+		}
 		drawRoomZoomed(_vm->_gameState.roomZoomX, _vm->_gameState.roomZoomY);
+		if (_vm->isCD()) {
+			_vm->_moMgr->setMouseVisibility(true);
+		}
 	} else if (_vm->_gmMgr->_roomZoomLevel == 2) {
+		if (_vm->isCD()) {
+			_vm->_moMgr->setMouseVisibility(false);
+		}
 		drawRoomZoomed_x3(_vm->_gameState.roomZoomX, _vm->_gameState.roomZoomY);
+		if (_vm->isCD()) {
+			_vm->_moMgr->setMouseVisibility(true);
+		}
 
 	} else if (_vm->_gmMgr->_roomZoomLevel == 3) {
+		if (_vm->isCD()) {
+			_vm->_moMgr->setMouseVisibility(false);
+		}
 		drawRoomZoomed_x4(_vm->_gameState.roomZoomX, _vm->_gameState.roomZoomY);
+		if (_vm->isCD()) {
+			_vm->_moMgr->setMouseVisibility(true);
+		}
 	}
 }
 void GraphicsManager::drawRoomZoomed(int16 centerx, int16 centery) {
@@ -3602,17 +3638,30 @@ void GraphicsManager::drawSettingsMenu(uint16 currSelection, uint16 volume, uint
 	uint16 scroll_baseY = 70;
 	char diskName[2] = "A";
 	decodeFrame(0x19, 0, 0, _iconsGraphics);
-	decodeFrame(0x1c, baseX, baseY + (currSelection * rowHeight), _iconsGraphics);
+	if (_vm->isCD() && (currSelection == 5 || currSelection == 6)) {
+		MouseManager::mouseTarget mt = _vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, 6);
+		drawRectangleOutline(mt.left, mt.top, mt.right, mt.bottom, 0x77);
+	}
+	else {
+		decodeFrame(0x1c, baseX, baseY + (currSelection * rowHeight), _iconsGraphics);
+	}
 	decodeFrame(0x1b, scroll_baseX + (volume * 4), scroll_baseY, _iconsGraphics);
 	decodeFrame(0x1b, scroll_baseX + (digiVolume * 4), scroll_baseY + rowHeight, _iconsGraphics);
-	decodeFrame(0x1b, scroll_baseX + (textSpeed * 30), scroll_baseY + (rowHeight * 2), _iconsGraphics);
+	if (!_vm->isCD()) {
+		decodeFrame(0x1b, scroll_baseX + (textSpeed * 30), scroll_baseY + (rowHeight * 2), _iconsGraphics);
+	}
 	decodeFrame(0x1b, scroll_baseX + (gameSpeed * 4), scroll_baseY + (rowHeight * 3), _iconsGraphics);
-	diskName[0] = 0x41 + diskNum;
-	_vm->_gmMgr->updateFontDataAndColor(0x78);
-	_vm->_txtMgr->drawString(133, 149, _videoBackbuffer, diskName);
-	_vm->_gmMgr->updateFontDataAndColor(0x77);
-	_vm->_txtMgr->drawString(132, 148, _videoBackbuffer, diskName);
-	decodeFrame(0x20 + langId, 129, 177, _iconsGraphics);
+	if (!_vm->isCD()) {
+		diskName[0] = 0x41 + diskNum;
+		_vm->_gmMgr->updateFontDataAndColor(0x78);
+		_vm->_txtMgr->drawString(133, 149, _videoBackbuffer, diskName);
+		_vm->_gmMgr->updateFontDataAndColor(0x77);
+		_vm->_txtMgr->drawString(132, 148, _videoBackbuffer, diskName);
+		decodeFrame(0x20 + langId, 129, 177, _iconsGraphics);
+	}
+	else {
+		decodeFrame(0x20 + langId, 129, 157, _iconsGraphics);
+	}
 	if (volume == 0) {
 		decodeFrame(0x37, 0, 0, _iconsGraphics);
 	}
@@ -3637,14 +3686,19 @@ void GraphicsManager::drawSettingsMenu(uint16 currSelection, uint16 volume, uint
 	} else {
 		drawSingleAnimFrame(3, 0, 0, framesCounter, _iconsGraphics);
 	}
-	if (textSpeed == 0 and framesCounter > 6) {
-		decodeFrame(0x46, 0, 0, _iconsGraphics);
+	if (_vm->isCD()) {
+		decodeFrame(0x4f+_vm->_gameState.speechOptions, 0, 0, _iconsGraphics);
 	}
-	if (textSpeed == 1 and framesCounter > 16) {
-		decodeFrame(0x46, 0, 0, _iconsGraphics);
-	}
-	if (textSpeed == 2 and framesCounter > 24) {
-		decodeFrame(0x46, 0, 0, _iconsGraphics);
+	else {
+		if (textSpeed == 0 and framesCounter > 6) {
+			decodeFrame(0x46, 0, 0, _iconsGraphics);
+		}
+		if (textSpeed == 1 and framesCounter > 16) {
+			decodeFrame(0x46, 0, 0, _iconsGraphics);
+		}
+		if (textSpeed == 2 and framesCounter > 24) {
+			decodeFrame(0x46, 0, 0, _iconsGraphics);
+		}
 	}
 	if (gameSpeed < 5) {
 		decodeFrame(0x4b, 0, 0, _iconsGraphics);
