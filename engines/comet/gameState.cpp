@@ -17,7 +17,7 @@ gameState::gameState() : activeObject(-1), selectedSaveLoadSlot(0), selectedMenu
 	memset(&objectsFlags[0], 0, sizeof(objectsFlags));
 	memset(&gameVars[0], 0, sizeof(gameVars));
 }
-void gameState::serialize(CometXorSerializer &s) {
+void gameState::serialize(CometXorSerializer &s, bool cdversion) {
 	uint16 wzero = 0;
 	byte bzero = 0;
 	s.stopXor();
@@ -123,6 +123,10 @@ void gameState::serialize(CometXorSerializer &s) {
 	}
 	for (uint16 i = 0; i < 256; i++) {
 		s.syncAsSint16LE(gameVars[i]);
+	}
+	if (cdversion) {
+		//TODO this should be vocRemainingSegments but O don't care about it for now
+		s.syncAsUint16LE(wzero);
 	}
 	s.stopXor();
 }

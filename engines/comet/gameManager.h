@@ -411,7 +411,7 @@ private:
 	uint16 skullCursorX;
 	uint16 skullCursorY;
 	uint8 *skullPuzzleData;
-	void drawSkullPuzzle();
+	void drawSkullPuzzle(int16 mouseX=-1, int16 mouseY=-1);
 	void drawSkullPuzzleTile(uint16 col, uint16 row, uint16 xoffs, uint16 yoffs);
 	bool skullPuzzleCheckSolution();
 	void skullPuzzleMoveHorz(uint16 row, int16 dir);
@@ -431,6 +431,7 @@ private:
 	uint8 _currentlyHandledMovementFlags;
 	uint8 _isConfirmKeyFlag;
 	bool _isConfirmKeyOrEnter;
+	uint8 comparePositions(int16 actorX, int16 actorY, int16 mouseX, int16 mouseY);
 	void moveMainActor();
 	uint8 _moveFlagsToFacingDir[16];
 	uint8 _facingDirChangeMatrix[5][5];
@@ -454,7 +455,10 @@ private:
 
 	uint8 handleSave();
 	uint8 handleSettings();
-	uint8 handleQuit();
+	typedef uint8(GameManager::* handleQuitFunc)();
+	handleQuitFunc handleQuit;
+	uint8 handleQuit_floppy();
+	uint8 handleQuit_CD();
 
 	void debugDraw();
 
@@ -462,6 +466,7 @@ private:
 	static ::Common::KeyCode _allowedKeys[];
 	uint8 handleSaveFilenameTyping(::Common::KeyCode key, uint8 selectedItem);
 	void showNoticeBox(const char *message);
+	void showNoticeBoxTimed(const char* message);
 	//			void saveEncryptedData(Common::DumpFile &f);
 	void quit();
 	void ripScreenToBlack(uint16 color, uint16 effect);
