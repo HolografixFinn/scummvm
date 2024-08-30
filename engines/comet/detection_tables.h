@@ -21,64 +21,90 @@
 
 namespace Cometengine {
 
-const PlainGameDescriptor testengineGames[] = {
-	{"comet", "Shadow of the comet"},
-	{"museum", "Lovecraft Museum"},
-	{0, 0}};
 
-const ADGameDescription gameDescriptions[] = {
-	// Comet PC version
-	{
-		"comet",
-		"English Floppy Version",
-		AD_ENTRY2s("E.CC4", 0, 120789, "CUDENGL.CC1", 0, 64401),
-		Common::EN_ANY,
-		Common::kPlatformDOS,
-		ADGF_NO_FLAGS,
-		GUIO1(GUIO_NONE)},
-	{"comet",
-	 "Italian Floppy Version",
-	 AD_ENTRY2s("I.CC4", 0, 122744, "CTUI.CC1", 0, 64557),
-	 Common::IT_ITA,
-	 Common::kPlatformDOS,
-	 ADGF_NO_FLAGS,
-	 GUIO1(GUIO_NONE)},
-	{"comet",
-	 "French Floppy Version",
-	 AD_ENTRY2s("T.CC4", 0, 131545, "CTUF.CC1", 0, 64549),
-	 Common::FR_FRA,
-	 Common::kPlatformDOS,
-	 ADGF_NO_FLAGS,
-	 GUIO1(GUIO_NONE)},
-	{"comet",
-	 "Spanish Floppy Version",
-	 AD_ENTRY2s("S.CC4", 0, 180367, "CTUS.CC1", 0, 64513),
-	 Common::ES_ESP,
-	 Common::kPlatformDOS,
-	 ADGF_NO_FLAGS,
-	 GUIO1(GUIO_NONE)},
-	{"comet",
-	 "Multilanguage CD Version",
-	 AD_ENTRY2s("SHADO_CD.CFG", 0, -1, "SHADOW.EXE",0,-1),
-	 Common::EN_ANY,
-	 Common::kPlatformDOS,
-	 ADGF_CD | ADGF_DROPLANGUAGE,
-	 GUIO1(GUIO_NONE)},
-	{"comet",
-	 "Demo Version",
-	 AD_ENTRY2s("BA.EXE", 0, -1, "BA2.EXE", 0, -1),
-	 Common::EN_ANY,
-	 Common::kPlatformDOS,
-	 ADGF_NO_FLAGS,
-	 GUIO1(GUIO_NONE)},
-	{"museum",
-	 "Lovecraft Museum CD Version",
-	 AD_ENTRY2s("SHADO_CD.CFG", 0, -1, "MUSEUM.EXE", 0, -1),
-	 Common::EN_ANY,
-	 Common::kPlatformDOS,
-	 ADGF_CD | ADGF_DROPLANGUAGE,
-	 GUIO1(GUIO_NONE)},
+	static const PlainGameDescriptor cometGames[] = {
+		{"comet", "Shadow of the comet"},
+		{"museum", "Lovecraft Museum"},
+		{0, 0} };
 
-	AD_TABLE_END_MARKER};
+	static const CometGameDescription gameDescriptions[] = {
+		// Comet PC version
+		{
+		{
+			"comet",
+			"English Floppy Version",
+			AD_ENTRY2s("E.CC4", 0, 120789, "CUDENGL.CC1", 0, 64401),
+			Common::EN_ANY,
+			Common::kPlatformDOS,
+			ADGF_NO_FLAGS,
+			GUIO1(GUIO_NONE)}
+			,
+		GType_COMET,
+		0
+		},
+		{
+		{"comet",
+		 "Italian Floppy Version",
+		 AD_ENTRY2s("I.CC4", 0, 122744, "CTUI.CC1", 0, 64557),
+		 Common::IT_ITA,
+		 Common::kPlatformDOS,
+		 ADGF_NO_FLAGS,
+		 GUIO1(GUIO_NONE)},
+		GType_COMET,
+		0
+		},
+		{
+		{"comet",
+		 "French Floppy Version",
+		 AD_ENTRY2s("T.CC4", 0, 131545, "CTUF.CC1", 0, 64549),
+		 Common::FR_FRA,
+		 Common::kPlatformDOS,
+		 ADGF_NO_FLAGS,
+		 GUIO1(GUIO_NONE)},
+			GType_COMET,
+			0},
+		{
+		{"comet",
+		 "Spanish Floppy Version",
+		 AD_ENTRY2s("S.CC4", 0, 180367, "CTUS.CC1", 0, 64513),
+		 Common::ES_ESP,
+		 Common::kPlatformDOS,
+		 ADGF_NO_FLAGS,
+		 GUIO1(GUIO_NONE)},
+		GType_COMET,
+		0},
+		{
+		{"comet",
+		 "Multilanguage CD Version",
+		 AD_ENTRY2s("SHADO_CD.CFG", 0, -1, "SHADOW.EXE",0,-1),
+		 Common::EN_ANY,
+		 Common::kPlatformDOS,
+		 ADGF_CD | ADGF_DROPLANGUAGE,
+		 GUIO1(GUIO_NONE)},
+		GType_COMET,
+		GF_CD}
+		,
+		{
+		{"comet",
+		 "Demo Version",
+		 AD_ENTRY2s("BA.EXE", 0, -1, "BA2.EXE", 0, -1),
+		 Common::EN_ANY,
+		 Common::kPlatformDOS,
+		 ADGF_NO_FLAGS,
+		 GUIO1(GUIO_NONE)},
+		GType_COMET,
+		GF_DEMO},
+		{
+		{"museum",
+		 "Lovecraft Museum CD Version",
+		 AD_ENTRY2s("SHADO_CD.CFG", 0, -1, "MUSEUM.EXE", 0, -1),
+		 Common::EN_ANY,
+		 Common::kPlatformDOS,
+		 ADGF_CD | ADGF_DROPLANGUAGE,
+		 GUIO1(GUIO_NONE)},
+		GType_MUSEUM,
+		GF_CD},
+
+		AD_TABLE_END_MARKER };
 
 } // End of namespace Cometengine
