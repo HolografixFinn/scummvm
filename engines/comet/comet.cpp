@@ -39,7 +39,7 @@
 
 namespace Cometengine {
 
-CometEngine::CometEngine(OSystem *syst, const ADGameDescription *gameDesc) : Engine(syst), _gameDescription(gameDesc),
+CometEngine::CometEngine(OSystem *syst, const CometGameDescription *gameDesc) : Engine(syst), _gameDescription(gameDesc),
 																			 _archMgr(nullptr), _gmMgr(nullptr), _gMgr(nullptr), _scMgr(nullptr), _txtMgr(nullptr), _audioMgr(nullptr), _spMgr(nullptr), _moMgr(nullptr),
 																			 _isEscPressed(false), _isScummVMQuit(false), _isGameQuit(false),
 																			 _isCDVersion(false), _isComet(false), _isMuseum(false), _isDemo(false), _gameState(), _console(nullptr) {
@@ -57,24 +57,24 @@ CometEngine::CometEngine(OSystem *syst, const ADGameDescription *gameDesc) : Eng
 	_totScene = -1;
 	_totScore = 0;
 
-	DebugMan.addDebugChannel(kDebugGeneral, "general", "General debug level");
-	if (_gameDescription->flags & ADGF_CD) {
+//	DebugMan.addDebugChannel(kDebugGeneral, "general", "General debug level");
+	if (_gameDescription->desc.flags & ADGF_CD) {
 		_isCDVersion = true;
 	}
 	if (_isCDVersion) {
 		_gameState.speechOptions = 1;
 	}
-	if (scumm_strnicmp(_gameDescription->gameId, "comet", 5) == 0) {
+	if (scumm_strnicmp(_gameDescription->desc.gameId, "comet", 5) == 0) {
 		_isComet = true;
 		if (_isCDVersion) {
 			Common::FSNode gamePath(Common::Path(ConfMan.get("path")));
 			Common::FSNode shadowPath = gamePath.getChild("SHADOW");
 			SearchMan.addDirectory("SHADOW", shadowPath, 0, 1);
 		}
-		if (scumm_strnicmp(_gameDescription->extra, "Demo", 4) == 0) {
+		if (scumm_strnicmp(_gameDescription->desc.extra, "Demo", 4) == 0) {
 			_isDemo = true;
 		}
-	} else if (scumm_strnicmp(_gameDescription->gameId, "museum", 6) == 0) {
+	} else if (scumm_strnicmp(_gameDescription->desc.gameId, "museum", 6) == 0) {
 		_isMuseum = true;
 		if (_isCDVersion) {
 			Common::FSNode gamePath(Common::Path(ConfMan.get("path")));
@@ -82,7 +82,7 @@ CometEngine::CometEngine(OSystem *syst, const ADGameDescription *gameDesc) : Eng
 			SearchMan.addDirectory("MUSEE", museePath, 0, 1);
 		}
 	}
-	switch (this->_gameDescription->language) {
+	switch (this->_gameDescription->desc.language) {
 	case Common::Language::FR_FRA:
 		_gameState.selectedLanguageID = 0;
 		break;
