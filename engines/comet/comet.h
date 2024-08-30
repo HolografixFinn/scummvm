@@ -56,24 +56,26 @@
 #include "comet/mouseManager.h"
 #include "comet_structs.h"
 #include "comet/gameState.h"
-#include "engines/advancedDetector.h"
+#include "comet/detection.h"
+//#include "engines/advancedDetector.h"
 
 namespace Cometengine {
+	/*
 enum CometDebugChannels {
 	kDebugGeneral = 1 << 0
 };
-
+*/
 
 
 class CometEngine : public Engine {
 public:
-	CometEngine(OSystem *syst, const ADGameDescription *gameDesc);
+	CometEngine(OSystem *syst, const CometGameDescription *gameDesc);
 	~CometEngine();
 
 	virtual Common::Error run();
 
 	// Detection related functions
-	const ADGameDescription *_gameDescription;
+	const CometGameDescription *_gameDescription;
 	const char *getGameId() const;
 	Common::Platform getPlatform() const;
 

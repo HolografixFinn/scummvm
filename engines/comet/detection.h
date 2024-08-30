@@ -25,45 +25,58 @@
 #include "engines/advancedDetector.h"
 
 namespace Cometengine {
+	enum CometGameType {
+		GType_COMET = 1,
+		GType_MUSEUM = 2
+	};
 
-enum CometengineDebugChannels {
-	kDebugGraphics = 1 << 0,
-	kDebugPath = 1 << 1,
-	kDebugScan = 1 << 2,
-	kDebugFilePath = 1 << 3,
-	kDebugScript = 1 << 4,
-};
+	enum CometGameFeatures {
+		GF_CD = 1 << 0,
+		GF_DEMO = 1 << 1,
+	};
 
-extern const PlainGameDescriptor testengineGames[];
+	enum CometengineDebugChannels {
+		kDebugGraphics = 1 << 0,
+		kDebugPath = 1 << 1,
+		kDebugScan = 1 << 2,
+		kDebugFilePath = 1 << 3,
+		kDebugScript = 1 << 4,
+	};
 
-extern const ADGameDescription gameDescriptions[];
+
+	struct CometGameDescription {
+		AD_GAME_DESCRIPTION_HELPERS(desc);
+
+		ADGameDescription desc;
+
+		int gameType;
+		uint32 features;
+	};
+	class CometMetaEngineDetection : public AdvancedMetaEngineDetection<Cometengine::CometGameDescription> {
+	private:
+		static const DebugChannelDef debugFlagList[];
+	public:
+		CometMetaEngineDetection();
+		~CometMetaEngineDetection() override {}
+
+		const char* getName() const override {
+			return "Comet Engine";
+		}
+
+		const char* getEngineName() const override {
+			return "Comet Engine";
+		}
+
+		const char* getOriginalCopyright() const override {
+			return "Comet Engine (C 2023)";
+		}
+
+		const DebugChannelDef* getDebugChannels() const override {
+			return debugFlagList;
+		}
+	};
 
 #define GAMEOPTION_ORIGINAL_SAVELOAD GUIO_GAMEOPTIONS1
-
-} // End of namespace Testengine
-
-class CometengineMetaEngineDetection : public AdvancedMetaEngineDetection {
-	static const DebugChannelDef debugFlagList[];
-
-public:
-	CometengineMetaEngineDetection();
-	~CometengineMetaEngineDetection() override {}
-
-	const char *getName() const override {
-		return "Comet Engine";
-	}
-
-	const char *getEngineName() const override {
-		return "Comet Engine";
-	}
-
-	const char *getOriginalCopyright() const override {
-		return "Comet Engine (C 2023)";
-	}
-
-	const DebugChannelDef *getDebugChannels() const override {
-		return debugFlagList;
-	}
-};
+} // End of namespace Cometengine
 
 #endif // COMETENGINE_DETECTION_H

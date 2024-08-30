@@ -3088,7 +3088,7 @@ uint8 GameManager::handleSave() {
 			_vm->_txtMgr->hideText();
 			_roomZoomLevel = 0;
 			char filename[256];
-			snprintf(filename, 256, "%s%02d.sav", _vm->_gameDescription->gameId, _vm->_gameState.selectedSaveLoadSlot);
+			snprintf(filename, 256, "%s%02d.sav", _vm->_gameDescription->desc.gameId, _vm->_gameState.selectedSaveLoadSlot);
 			Common::SaveFileManager *sfm = g_system->getSavefileManager();
 			Common::OutSaveFile *osf = sfm->openForSaving(filename, false);
 			//			if (!f.open(filename)) {
@@ -3330,7 +3330,7 @@ int32 GameManager::loadSaveFilesDescriptions() {
 	for (uint8 i = 0; i < 10; i++) {
 		_saveFilesDescription[i][0] = 0;
 		char filename[256];
-		snprintf(filename, 256, "%s%02d.sav", _vm->_gameDescription->gameId, i);
+		snprintf(filename, 256, "%s%02d.sav", _vm->_gameDescription->desc.gameId, i);
 		Common::InSaveFile *isf = sfm->openForLoading(filename);
 		if (isf) {
 			if (_vm->isCD()) {
@@ -3468,7 +3468,7 @@ uint8 GameManager::handleLoad() {
 			}
 			_roomZoomLevel = 0;
 			char filename[256];
-			snprintf(filename, 256, "%s%02d.sav", _vm->_gameDescription->gameId, _vm->_gameState.selectedSaveLoadSlot);
+			snprintf(filename, 256, "%s%02d.sav", _vm->_gameDescription->desc.gameId, _vm->_gameState.selectedSaveLoadSlot);
 			Common::SaveFileManager *sfm = g_system->getSavefileManager();
 			Common::InSaveFile *isf = sfm->openRawFile(filename); //openForLoading defaults to compressed stream
 			//			if (f.open(filename)) {
