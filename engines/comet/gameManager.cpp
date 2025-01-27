@@ -2373,7 +2373,7 @@ void GameManager::handleMenu() {
 		if (_vm->isQuitRequested()) {
 			return;
 		}
-
+		operation = Common::KEYCODE_INVALID;
 		frameIdx++;
 		if (_vm->isCD()) {
 			mouseTarget = _vm->_moMgr->getCurrentTarget(MouseManager::Targets::MAINMENU, maxIconNumber+1, -1);
@@ -2789,6 +2789,7 @@ uint8 GameManager::handleDiary() {
 		}
 		operation = Common::KEYCODE_INVALID;
 		if (_vm->isCD()) {
+			operation = Common::KEYCODE_INVALID;
 			mouseTarget = _vm->_moMgr->getCurrentTarget(MouseManager::Targets::DIARY, 2, -1);
 			switch (mouseTarget) {
 			case -1:
