@@ -221,7 +221,7 @@ Common::Error CometEngine::run() {
 		return Common::kNoError;
 	}
 	
-	if (!isCD()) {
+	if (!isCD()&&false) {
 
 		bool protectionResult = _gmMgr->copyProtection();
 		if (isQuitRequested() || (!protectionResult)) {
