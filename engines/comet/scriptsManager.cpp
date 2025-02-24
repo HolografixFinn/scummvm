@@ -547,6 +547,11 @@ bool ScriptsManager::op_multiChoice(RoomScript *const script) {
 	_vm->_txtMgr->setChoice(0);
 	_vm->_gmMgr->setWaitForEnter();
 	script->flags |= ScriptFlags::WAIT_CHOICE;
+	if (_vm->isCD()) {
+		_vm->_txtMgr->_currentChoiceAudio = -1;
+		_vm->_gmMgr->waitForNoInput();
+		_vm->_txtMgr->drawMultiChoice();
+	}
 	return true;
 }
 //36

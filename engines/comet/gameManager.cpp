@@ -712,9 +712,18 @@ void GameManager::enterPressed() {
 		_vm->_txtMgr->setTextDisplayed(false);
 		_vm->_spMgr->stopSpeech();
 		//TODO handle mouse case
-		while (_lastPressedKey != Common::KeyCode::KEYCODE_INVALID) {
-			updateInputStatus();
-			_vm->_gMgr->_hfCappedUpdate();
+		if (_vm->_moMgr->isInitialized()) {
+			while (_vm->_moMgr->getLeftBut() || _vm->_moMgr->getRightBut()) {
+				updateInputStatus();
+				_vm->_gMgr->_hfCappedUpdate();
+			}
+
+		}
+		else {
+			while (_lastPressedKey != Common::KeyCode::KEYCODE_INVALID) {
+				updateInputStatus();
+				_vm->_gMgr->_hfCappedUpdate();
+			}
 		}
 	} else {
 

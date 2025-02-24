@@ -34,7 +34,9 @@ TextManager::TextManager(CometEngine *vm) :                                     
 											// _textDurationScale(0), //_textBlock(0),
 											_skipSpeechBox(false), _textPadding(4), _textSingleLineHeight(8), _decimalConversionBuffer(),
 											_multiChoiceIntroSentence(0), _multiChoiceTextX(0), _multiChoiceTextY(0), _multiChoiceNumElems(0), _choices(), _multiChoiceIntroSentencePtr(nullptr),
-											_currentChoiceColor(0x4f), _currentChoiceColorStep(-1), _isEvenFrame(true) {
+											_currentChoiceColor(0x4f), _currentChoiceColorStep(-1), _isEvenFrame(true), _currentChoiceAudio(-1),
+											audioOnly_borderColor(82), audioOnly_colorStep(1), audioOnly_optionLetter{0x41, 0x00}
+{
 	memset(_langsFirstChars, 0, 5);
 //	bool isCd=(desc->flags&&
 	if (_vm->isCD() || _vm->_gameState.selectedLanguageID ==0) {
@@ -278,70 +280,183 @@ void TextManager::handleOnScreenText() {
 	}
 }
 void TextManager::handleMultiChoice() {
-	uint8 currChoice = _choice;
+	uint8 prevChoice = _choice;
 	uint8 currMovFlags = _vm->_gmMgr->getCurrentMovementFlags();
 	if (currMovFlags & GameManager::kUpFlag) {
-		if (currChoice > 0) {
+		if (_choice > 0) {
 			_choice -= 1;
 			_vm->_gmMgr->waitForNoInput();
+			if (_vm->isCD() && _vm->_moMgr->isInitialized()) {
+				auto &mt = _vm->_moMgr->getMCTarget(_choice);
+				_vm->_moMgr->warpMouse(
+					mt.left + ((mt.right - mt.left) / 2),
+					mt.top + ((mt.bottom - mt.top) / 2)
+				);
+			}
 		}
 	}
 	if (currMovFlags & GameManager::kDownFlag) {
-		if (currChoice < _multiChoiceNumElems - 1) {
+		if (prevChoice < _multiChoiceNumElems - 1) {
 			_choice += 1;
 			_vm->_gmMgr->waitForNoInput();
+			if (_vm->isCD() && _vm->_moMgr->isInitialized()) {
+				auto& mt = _vm->_moMgr->getMCTarget(_choice);
+				_vm->_moMgr->warpMouse(
+					mt.left + ((mt.right - mt.left) / 2),
+					mt.top + ((mt.bottom - mt.top) / 2)
+				);
+			}
 		}
 	}
-	if (currChoice == _vm->_txtMgr->getChoice()) {
+	if (_vm->isCD()) {
+		if (currMovFlags & GameManager::kLeftFlag) {
+			_currentChoiceAudio = -1;
+			_vm->_gmMgr->waitForNoInput();
+		}
+		if (_vm->_moMgr->isInitialized() && (_choice== prevChoice)) {
+			auto currMouseTarget = _vm->_moMgr->getCurrentTarget(MouseManager::Targets::MULTICHOICE, _multiChoiceNumElems, -1);
+			if (currMouseTarget != -1) {
+				_choice = currMouseTarget;
+			}
+		}
+	}
+	if (prevChoice != _vm->_txtMgr->getChoice()) {
 		_currentChoiceColor = 0x4f;
 	}
 	drawMultiChoice();
+	if (_vm->isCD()) {
+		handleMultiChoiceVoice();
+	}
 }
-void TextManager::drawMultiChoice() {
-	uint16 x = _multiChoiceTextX;
-	uint16 y = _multiChoiceTextY;
-	uint8 color3 = 0;
-	uint8 color = _vm->_gmMgr->getActor(0)->speechColor;
-	if (color == 0x19) {
-		color3 = 0x16;
-	} else {
-		color3 = color;
-	}
-	if (_multiChoiceIntroSentence != 0xffff) {
-		prepareString(_multiChoiceIntroSentencePtr);
-		_vm->_gMgr->drawSpeechBox(x - _textPadding, y - _textPadding, x + _textPadding + (_maxStringHalfWidth * 2), y + _textLinesHeight);
-		y = printStringLines(_multiChoiceIntroSentencePtr, x, y, color, true); //ultimo parametro era -1 invec di true
-		x += 16;
-		y += _textSingleLineHeight;
-	}
-	for (uint8 i = 0; i < _multiChoiceNumElems; i++) {
-		Choice *choice = &_choices[i];
-		uint8 color2 = color3;
-		if (i == _choice) {
-			if (color == 0x19) {
-				color2 = _currentChoiceColor;
-				_currentChoiceColor += _currentChoiceColorStep;
-				if (_currentChoiceColor > 0x19) {
-					_currentChoiceColor = 0x19;
-					_currentChoiceColorStep = -1;
-				}
-				if (_currentChoiceColor < 0x16) {
-					_currentChoiceColor = 0x16;
-					_currentChoiceColorStep = 1;
-				}
-
-			} else {
-				if (_isEvenFrame) {
-					color2 = color;
-				} else {
-					color2 = 0x9f;
+void TextManager::handleMultiChoiceVoice() {
+	_vm->_gmMgr->updateInputStatus();
+	if (_vm->_gmMgr->_lastPressedKey == Common::KeyCode::KEYCODE_KP_ENTER || _vm->_gmMgr->_lastPressedKey == Common::KeyCode::KEYCODE_RETURN || _vm->_moMgr->getLeftBut()) {
+		if (_choice != -1) {
+			if (_vm->_gameState.speechOptions == 1) {
+				_vm->_gMgr->actorSaySentenceWithAnimation(0, _choices[_choice].sentenceIdx, -1);
+				while (_vm->_spMgr->isSpeechActive()) {
+					_vm->_gmMgr->updateInputStatus();
+					if (_vm->isQuitRequested()) {
+						return;
+					}
+					_vm->_spMgr->handleSpeech();
+					_vm->_gMgr->waitVRetrace();
 				}
 			}
+			_vm->_gmMgr->unsetWaitForEnter();
+			while (_vm->_gmMgr->_lastPressedKey != Common::KeyCode::KEYCODE_INVALID || _vm->_moMgr->getLeftBut() || _vm->_moMgr->getRightBut()) {
+				_vm->_gMgr->waitVRetrace();
+				_vm->_gmMgr->updateInputStatus();
+			}
 		}
-		prepareString(choice->sentence);
-		_vm->_gMgr->drawSpeechBox(x - _textPadding, y - _textPadding, x + _textPadding + (_maxStringHalfWidth * 2), y + _textLinesHeight);
-		y = printStringLines(choice->sentence, x, y, color2, 1);
-		y += _textSingleLineHeight;
+	}
+}
+void TextManager::drawMultiChoice_audioOnly() {
+	audioOnly_borderColor += audioOnly_colorStep;
+	if (audioOnly_borderColor == 94) {
+		audioOnly_colorStep = -1;
+	}
+	if (audioOnly_borderColor == 82) {
+		audioOnly_colorStep = 1;
+	}
+	if (_multiChoiceIntroSentence >= 0) {
+		_vm->_spMgr->startSpeech(_multiChoiceIntroSentence);
+		_multiChoiceIntroSentence = -2;
+	}
+	_multiChoiceIntroSentence = -1;
+	audioOnly_optionLetter[0] = 0x41;
+	_multiChoiceTextX = 8;
+	_multiChoiceTextY = 16;
+	for (uint8_t i = 0; i < _multiChoiceNumElems; i++) {
+		_vm->_gMgr->drawRectangleFilled(_multiChoiceTextX - 2, (i * 16) + _multiChoiceTextY - 10, _multiChoiceTextX + 10, (i * 16) + _multiChoiceTextY + 2, 84);
+		auto mouseTarget = _vm->_moMgr->getMCTarget(i);
+		mouseTarget.left = _multiChoiceTextX - 2;
+		mouseTarget.top = (i * 16) + _multiChoiceTextY - 10;
+		mouseTarget.right = _multiChoiceTextX + 10;
+		mouseTarget.bottom = (i * 16) + _multiChoiceTextY + 2;
+		mouseTarget.ID = i;
+		if (i == _choice) {
+			_vm->_gMgr->drawRectangleOutline(_multiChoiceTextX - 3, (i * 16) + _multiChoiceTextY - 11, _multiChoiceTextX + 11, (i * 16) + _multiChoiceTextY + 3, audioOnly_borderColor);
+		}
+		else {
+			_vm->_gMgr->drawRectangleOutline(_multiChoiceTextX - 3, (i * 16) + _multiChoiceTextY - 11, _multiChoiceTextX + 11, (i * 16) + _multiChoiceTextY + 3, 88);
+		}
+		_vm->_gmMgr->updateFontDataAndColor(94);
+		drawString(_multiChoiceTextX, (i * 16) + _multiChoiceTextY - 8, _vm->_gMgr->_videoBackbuffer, audioOnly_optionLetter);
+		audioOnly_optionLetter[0]++;
+	}
+	if (_choice != _currentChoiceAudio) {
+		if (_choice != -1) {
+			_vm->_spMgr->startSpeech(_choices[_choice].sentenceIdx);
+		}
+		_currentChoiceAudio = _choice;
+	}
+
+}
+void TextManager::drawMultiChoice() {
+	if (_vm->isCD() && _vm->_gameState.speechOptions == 2) {
+		drawMultiChoice_audioOnly();
+	}
+	else {
+		uint16 x = _multiChoiceTextX;
+		uint16 y = _multiChoiceTextY;
+		uint8 color3 = 0;
+		uint8 color = _vm->_gmMgr->getActor(0)->speechColor;
+		if (color == 0x19) {
+			color3 = 0x16;
+		}
+		else {
+			color3 = color;
+		}
+		if (!_vm->isCD()) {
+			if (_multiChoiceIntroSentence != 0xffff) {
+				prepareString(_multiChoiceIntroSentencePtr);
+				_vm->_gMgr->drawSpeechBox(x - _textPadding, y - _textPadding, x + _textPadding + (_maxStringHalfWidth * 2), y + _textLinesHeight);
+				y = printStringLines(_multiChoiceIntroSentencePtr, x, y, color, true); //ultimo parametro era -1 invec di true
+				x += 16;
+				y += _textSingleLineHeight;
+			}
+		}
+		for (uint8 i = 0; i < _multiChoiceNumElems; i++) {
+			Choice* choice = &_choices[i];
+			uint8 color2 = color3;
+			if (i == _choice) {
+				if (color == 0x19) {
+					color2 = _currentChoiceColor;
+					_currentChoiceColor += _currentChoiceColorStep;
+					if (_currentChoiceColor > 0x19) {
+						_currentChoiceColor = 0x19;
+						_currentChoiceColorStep = -1;
+					}
+					if (_currentChoiceColor < 0x16) {
+						_currentChoiceColor = 0x16;
+						_currentChoiceColorStep = 1;
+					}
+
+				}
+				else {
+					if (_isEvenFrame) {
+						color2 = color;
+					}
+					else {
+						color2 = 0x9f;
+					}
+				}
+			}
+			prepareString(choice->sentence);
+			_vm->_gMgr->drawSpeechBox(x - _textPadding, y - _textPadding, x + _textPadding + (_maxStringHalfWidth * 2), y + _textLinesHeight);
+			y = printStringLines(choice->sentence, x, y, color2, 1);
+			if (_vm->isCD()) {
+				MouseManager::mouseTarget &mouseTarget = _vm->_moMgr->getMCTarget(i);
+				mouseTarget.left = x - _textPadding;
+				mouseTarget.top = y - _textLinesHeight - _textPadding;
+				mouseTarget.right = x + (_maxStringHalfWidth * 2) + _textPadding;
+				mouseTarget.bottom = y + _textPadding - 1;
+				mouseTarget.ID = i;
+
+			}
+			y += _textSingleLineHeight;
+		}
 	}
 }
 

@@ -85,7 +85,12 @@ class CometEngine;
 		void hideDialogue();
 		void showDialogue();
 		void handleMultiChoice();
-
+		void handleMultiChoiceVoice();
+		int16 _currentChoiceAudio;
+		void drawMultiChoice();
+		int16 audioOnly_borderColor;
+		int16 audioOnly_colorStep;
+		char audioOnly_optionLetter[2];
 	protected:
 	private:
 		uint16 _choice;
@@ -135,7 +140,7 @@ class CometEngine;
 		uint8 _textSingleLineHeight;
 		char _decimalConversionBuffer[32];
 		bool printDigit(uint16 &val, uint16 division, char * &ptr, bool isPrintEmpty);
-		void drawMultiChoice();
+		void drawMultiChoice_audioOnly();
 		uint16 _multiChoiceIntroSentence;
 		const char *_multiChoiceIntroSentencePtr;
 		uint16 _multiChoiceTextX;
