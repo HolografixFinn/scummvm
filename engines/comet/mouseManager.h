@@ -59,6 +59,7 @@ public:
 		DIARY,
 		OPTIONSMENU,
 		SKULLPUZZLE,
+		MULTICHOICE,
 		QUITMENU
 	};
 	int16 getCurrentTarget(Targets tag, uint8 numElems, int16 notFound);
@@ -70,7 +71,12 @@ public:
 	void warpMouse(int16 x, int16 y);
 	void warpMouseOffset(int16 x, int16 y);
 	uint32 getButStatus();
+	mouseTarget& getMCTarget(uint8_t idx) {
+		return this->_multiChoiceMouseTarget[idx];
+	}
+//	void setMCTarget(uint8_t idx, uint16 l, uint16 r, uint16 t, uint16 b, uint16 id);
 private:
+	static mouseTarget _multiChoiceMouseTarget[8];
 	static const mouseTarget mainMenuMouseTarget[];
 	static const mouseTarget diskMenuMouseTarget[];
 	static const mouseTarget objsMenuMouseTarget[];

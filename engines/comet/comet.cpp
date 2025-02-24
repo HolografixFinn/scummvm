@@ -273,15 +273,20 @@ Common::Error CometEngine::run() {
 				break;
 			}
 		}
-		if (_gmMgr->_lastPressedKey == Common::KeyCode::KEYCODE_RETURN || _gmMgr->_lastPressedKey == Common::KeyCode::KEYCODE_KP_ENTER
-			|| (isCD() && _moMgr->getRightBut() && _txtMgr->isTextDisplayed())) {
-			_gmMgr->enterPressed();
-		}
+		/*
 		if (_gmMgr->_lastPressedKey == Common::KeyCode::KEYCODE_p) {
 			_gmMgr->handlePause();
 		}
-		if (!_gmMgr->waitingForEnter() && _gameState.currPakNum != 3 && _gmMgr->getMainActor()->lastIntersectionType != 4 && !_gMgr->getJustFadedOut() && !_txtMgr->isTextDisplayed()) {
+		*/
+		if ((!_gmMgr->waitingForEnter()) && _gameState.currPakNum != 3 && _gmMgr->getMainActor()->lastIntersectionType != 4 && (!_gMgr->getJustFadedOut()) && (!_txtMgr->isTextDisplayed())) {
 			_gmMgr->handleInputAndMenus();
+		}
+		else {
+			if (_gmMgr->_lastPressedKey == Common::KeyCode::KEYCODE_RETURN || _gmMgr->_lastPressedKey == Common::KeyCode::KEYCODE_KP_ENTER
+				|| (isCD() && _moMgr->getRightBut() && _txtMgr->isTextDisplayed())) {
+				_gmMgr->enterPressed();
+			}
+
 		}
 		if (isQuitRequested()) {
 			break;

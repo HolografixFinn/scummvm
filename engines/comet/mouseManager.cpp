@@ -1983,7 +1983,16 @@ namespace Cometengine {
 		{0x44,0x84,0x72,0x91,0},
 		{0xc9,0x3f,0xf7,0x4c,1},
 	};
-
+	MouseManager::mouseTarget MouseManager::_multiChoiceMouseTarget[] = {
+		{0,0,0,0,0},
+		{0,0,0,0,1},
+		{0,0,0,0,2},
+		{0,0,0,0,3},
+		{0,0,0,0,4},
+		{0,0,0,0,5},
+		{0,0,0,0,6},
+		{0,0,0,0,7}
+	};
 	const MouseManager::mouseTarget* MouseManager::mouseTargets[] = {
 		MouseManager::mainMenuMouseTarget,
 		MouseManager::diskMenuMouseTarget,
@@ -1992,6 +2001,7 @@ namespace Cometengine {
 		MouseManager::diaryMouseTarget,
 		MouseManager::optionsMenuMouseTarget,
 		MouseManager::skullMouseTarget,
+		MouseManager::_multiChoiceMouseTarget,
 		MouseManager::quitMenuMouseTarget
 	};
 } // namespace Cometengine
