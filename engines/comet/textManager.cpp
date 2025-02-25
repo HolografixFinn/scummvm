@@ -369,7 +369,7 @@ void TextManager::drawMultiChoice_audioOnly() {
 	_multiChoiceTextY = 16;
 	for (uint8_t i = 0; i < _multiChoiceNumElems; i++) {
 		_vm->_gMgr->drawRectangleFilled(_multiChoiceTextX - 2, (i * 16) + _multiChoiceTextY - 10, _multiChoiceTextX + 10, (i * 16) + _multiChoiceTextY + 2, 84);
-		auto mouseTarget = _vm->_moMgr->getMCTarget(i);
+		auto &mouseTarget = _vm->_moMgr->getMCTarget(i);
 		mouseTarget.left = _multiChoiceTextX - 2;
 		mouseTarget.top = (i * 16) + _multiChoiceTextY - 10;
 		mouseTarget.right = _multiChoiceTextX + 10;
@@ -647,7 +647,7 @@ const char *TextManager::getSysMessages() {
 void TextManager::setChoice(uint16 choiceIdx) {
 	_choice = choiceIdx;
 }
-void TextManager::setMultiChoiceIntroSentence(uint16 sentenceIdx) {
+void TextManager::setMultiChoiceIntroSentence(int16 sentenceIdx) {
 	_multiChoiceIntroSentence = sentenceIdx;
 }
 void TextManager::setMultiChoiceTextCoords(uint16 x, uint16 y) {

@@ -518,12 +518,12 @@ bool ScriptsManager::op_zoomOnActor(RoomScript *const script) {
 //35
 bool ScriptsManager::op_multiChoice(RoomScript *const script) {
 	_vm->_txtMgr->hideDialogue();
-	uint16 introSentence = readWordParameter(script->current);
+	int16 introSentence = readWordParameter(script->current);
 	_vm->_txtMgr->setMultiChoiceIntroSentence(introSentence);
 	char *buffer = _vm->_txtMgr->getMultiChoiceText();
 	*((uint32 *)buffer) = (uint32)28;
 	uint32 sentenceLen = 0;
-	if (introSentence != 0xffff) {
+	if (introSentence != -1) {
 		sentenceLen = _vm->_txtMgr->getSentence(_vm->_gameState.textChapterID + 3, introSentence, buffer + 28);
 		_vm->_txtMgr->setMultiChoiceIntroSentenceData(_vm->_txtMgr->getSentencePtr(0, buffer));
 	}
@@ -542,7 +542,7 @@ bool ScriptsManager::op_multiChoice(RoomScript *const script) {
 		script->current += 2;
 	}
 	if (introSentence == _vm->_txtMgr->getChoice(0)->sentenceIdx) {
-		_vm->_txtMgr->setMultiChoiceIntroSentence(0xffff);
+		_vm->_txtMgr->setMultiChoiceIntroSentence(-1);
 	}
 	_vm->_txtMgr->setChoice(0);
 	_vm->_gmMgr->setWaitForEnter();
