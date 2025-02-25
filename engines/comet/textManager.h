@@ -74,7 +74,7 @@ class CometEngine;
 			const char *sentence;
 			const char *scriptData;
 		};
-		void setMultiChoiceIntroSentence(uint16 sentenceIdx);
+		void setMultiChoiceIntroSentence(int16 sentenceIdx);
 		void setMultiChoiceTextCoords(uint16 x, uint16 y);
 		void setMultiChoiceNum(uint8 num);
 		Choice *getChoice(uint8 idx);
@@ -93,7 +93,7 @@ class CometEngine;
 		char audioOnly_optionLetter[2];
 	protected:
 	private:
-		uint16 _choice;
+		int16 _choice;
 		int16 _prevAnimationOrActor;
 		int16 _prevFrameToDraw;
 		int16 _prevFixedFrame;
@@ -141,7 +141,7 @@ class CometEngine;
 		char _decimalConversionBuffer[32];
 		bool printDigit(uint16 &val, uint16 division, char * &ptr, bool isPrintEmpty);
 		void drawMultiChoice_audioOnly();
-		uint16 _multiChoiceIntroSentence;
+		int16 _multiChoiceIntroSentence;
 		const char *_multiChoiceIntroSentencePtr;
 		uint16 _multiChoiceTextX;
 		uint16 _multiChoiceTextY;

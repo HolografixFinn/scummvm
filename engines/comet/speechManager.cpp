@@ -124,8 +124,10 @@ void SpeechManager::stopSpeech() {
 	_vm->_audioMgr->stopDigi();
 	_vocRemainingSegments = 0;
 	_isMultiFiles = false;
-	if (_vm->_gameState.speechOptions == 2 && _isDescription) {
-		_vm->_txtMgr->hideDialogue();
+	if (_vm->_gameState.speechOptions == 2 && (!_isDescription)) {
+		_vm->_txtMgr->setTextDisplayed(false);
+		_vm->_txtMgr->setTextRemainingFrame(0);
+
 		
 	}
 	_isSpeechPlaying = false;
