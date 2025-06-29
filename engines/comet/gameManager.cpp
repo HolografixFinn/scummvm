@@ -3699,11 +3699,11 @@ uint8 GameManager::handleSettings() {
 						_vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, currSelection + 1).top -
 						_vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, currSelection).top
 					);
-					if (_vm->_moMgr->getCurrX() > _vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, 0).right) {
-						_vm->_moMgr->warpMouse(_vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, 0).right, -1);
+					if (_vm->_moMgr->getCurrX() > _vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, currSelection+1).right) {
+						_vm->_moMgr->warpMouse(_vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, currSelection+1).right, -1);
 					}
-					if (_vm->_moMgr->getCurrX() <= _vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, 0).left) {
-						_vm->_moMgr->warpMouse(_vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, 0).left, -1);
+					if (_vm->_moMgr->getCurrX() <= _vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, currSelection+2+maxSelection).left) {
+						_vm->_moMgr->warpMouse(_vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, currSelection+2+maxSelection).left, -1);
 					}
 				}
 				currSelection++;
@@ -3713,11 +3713,11 @@ uint8 GameManager::handleSettings() {
 						_vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, maxSelection).top -
 						_vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, 0).top)
 					);
-					if (_vm->_moMgr->getCurrX() > _vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, currSelection + 1).right) {
-						_vm->_moMgr->warpMouse(_vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, currSelection + 1).right, -1);
+					if (_vm->_moMgr->getCurrX() > _vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, 0).right) {
+						_vm->_moMgr->warpMouse(_vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, 0).right, -1);
 					}
-					if (_vm->_moMgr->getCurrX() < _vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, currSelection + maxSelection + 1).left) {
-						_vm->_moMgr->warpMouse(_vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, currSelection + maxSelection + 1).left, -1);
+					if (_vm->_moMgr->getCurrX() < _vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, maxSelection + 1).left) {
+						_vm->_moMgr->warpMouse(_vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, maxSelection + 1).left, -1);
 					}
 				}
 				currSelection = 0;

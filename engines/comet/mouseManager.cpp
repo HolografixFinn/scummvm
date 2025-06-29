@@ -97,9 +97,11 @@ namespace Cometengine {
 	}
 	void MouseManager::warpMouse(int16 x, int16 y) {
 		_vm->_system->warpMouse(x >= 0 ? x : _currPos.x, y >= 0 ? y : _currPos.y);
+		_vm->_gmMgr->updateInputStatus();
 	}
 	void MouseManager::warpMouseOffset(int16 x, int16 y) {
 		_vm->_system->warpMouse(_currPos.x+x, _currPos.y+y);
+		_vm->_gmMgr->updateInputStatus();
 	}
 
 	/*
@@ -164,7 +166,7 @@ namespace Cometengine {
 
 	}
 	int16 MouseManager::getCurrentTarget(Targets tag, uint8 numElems, int16 notFound) {
-
+		_vm->_gmMgr->updateInputStatus();
 		const mouseTarget* list = MouseManager::mouseTargets[static_cast<uint8>(tag)];
 		for (uint8 i = 0; i < numElems; i++) {
 			if (_currPos.x >= list[i].left && _currPos.x <= list[i].right && _currPos.y >= list[i].top && _currPos.y <= list[i].bottom) {
