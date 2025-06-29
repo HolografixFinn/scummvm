@@ -2791,10 +2791,10 @@ uint8 GameManager::handleDiary() {
 					_vm->_spMgr->startSpeech(currPage);
 				}
 			}
-			else {
+//			else {
 				prevPage = currPage;
 				_vm->_spMgr->handleSpeech();
-			}
+//			}
 		}
 		operation = Common::KEYCODE_INVALID;
 		if (_vm->isCD()) {
@@ -2882,7 +2882,8 @@ uint8 GameManager::handleDiary() {
 	}
 	waitForNoInput();
 	if (_vm->isCD()) {
-
+		_vm->_spMgr->stopSpeech();
+		_vm->_txtMgr->setTextDisplayed(false);
 		_vm->_gameState.textChapterID = realChapter;
 		_vm->_spMgr->openNARarchive(realChapter);
 	}
