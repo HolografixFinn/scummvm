@@ -206,7 +206,7 @@ public:
 	uint8 comparePoints(uint16 x1, uint16 y1, uint16 x2, uint16 y2);
 	uint8 _roomZoomLevel;
 	bool _zoomRestored;
-	uint8 *priorityAllocateAndGetFile(const char *archiveName, uint16 fileNum);
+	Common::SharedPtr<uint8> priorityAllocateAndGetFile(const char *archiveName, uint16 fileNum);
 	void showLoopedAnimation(uint8 subfile, uint8 anim, int16 frame_flags, uint8 numLoops, uint8 numDigiFX, const char *cues);
 	uint16 handleSkullPuzzle();
 	uint16 forceLoading;
@@ -216,6 +216,22 @@ public:
 
 protected:
 private:
+	// lazy solution for resources
+//	Common::SharedPtr<uint8> _monolithicResScPtr{};
+
+	Common::SharedPtr<uint8> _fontScPtr{};
+//	Common::SharedPtr<uint8> _speechBoxScPtr{};
+//	Common::SharedPtr<uint8> _mainWalkScPtr{};
+//	Common::SharedPtr<uint8> _iconsScPtr{};
+//	Common::SharedPtr<uint8> _objectsScPtr{};
+
+	Common::SharedPtr<uint8> _cursorsScPtr{};
+
+//	Common::SharedPtr<uint8> _mainPaletteScPtr{};
+//	Common::SharedPtr<uint8> _sepiaPaletteScPtr{};
+//	Common::SharedPtr<uint8> _cdIntroPaletteScPtr{};
+//	Common::SharedPtr<uint8> _extraPaletteScPtr{};
+
 	//for map
 	typedef struct _startCoords {
 		uint16 x;
@@ -282,7 +298,7 @@ private:
 
 	uint8 *_resPakData;
 
-	uint8 *_fontData;
+//	uint8 *_fontData;
 	//			uint16 _movementMask;
 
 	struct Point {
@@ -393,29 +409,47 @@ private:
 		ConstellationStar stars[7];
 	} PACKED_STRUCT;
 #include "common/pack-end.h"
-	void drawCopyProtection(uint8 numRightAnswers);
-	char *_copyProtectionTitleSentence;
-	char *_copyProtectionInstructionsSentence;
-	Constellation _copyProtectionsConstellationsData[11 * 16];
-	uint8 *_copyProtectionStarsGraphics;
-	uint8 _copyProtectionRightConstellationRow;
-	uint8 _copyProtectionRightConstellationColumn;
-	Constellation _copyProtectionDisplayedConstellationsData[9];
-	uint8 _copyProtectionNumColumns;
-	uint8 _copyProtectionNumRows;
+	struct CopyProtectionData {
+		char copyProtectionTitleSentence[50];
+		char copyProtectionInstructionsSentence[50];
+		Constellation copyProtectionsConstellationsData[11 * 16];
+		Common::SharedPtr<uint8> copyProtectionStarsGraphics;
+		uint8 copyProtectionRightConstellationRow;
+		uint8 copyProtectionRightConstellationColumn;
+		Constellation copyProtectionDisplayedConstellationsData[9];
+		uint8 copyProtectionNumColumns;
+		uint8 copyProtectionNumRows;
+	};
+	void drawCopyProtection(uint8 numRightAnswers, const CopyProtectionData& cpData);
+//	char *_copyProtectionTitleSentence;
+//	char *_copyProtectionInstructionsSentence;
+//	Constellation _copyProtectionsConstellationsData[11 * 16];
+//	uint8 *_copyProtectionStarsGraphics;
+//	uint8 _copyProtectionRightConstellationRow;
+//	uint8 _copyProtectionRightConstellationColumn;
+//	Constellation _copyProtectionDisplayedConstellationsData[9];
+//	uint8 _copyProtectionNumColumns;
+//	uint8 _copyProtectionNumRows;
 	//
 
 	//skull puzzle stuff
 	static uint16 const skullInitialTilesState[36];
-	uint16 skullTilesState[36];
-	uint16 skullCursorX;
-	uint16 skullCursorY;
-	uint8 *skullPuzzleData;
-	void drawSkullPuzzle(int16 mouseX=-1, int16 mouseY=-1);
-	void drawSkullPuzzleTile(uint16 col, uint16 row, uint16 xoffs, uint16 yoffs);
-	bool skullPuzzleCheckSolution();
-	void skullPuzzleMoveHorz(uint16 row, int16 dir);
-	void skullPuzzleMoveVert(uint16 col, int16 dir);
+	struct skullPuzzleData {
+		uint16 skullTilesState[36];
+		uint16 skullCursorX;
+		uint16 skullCursorY;
+		Common::SharedPtr<uint8> skullPuzzleData;
+
+	};
+//	uint16 skullTilesState[36];
+//	uint16 skullCursorX;
+//	uint16 skullCursorY;
+//	uint8 *skullPuzzleData;
+	void drawSkullPuzzle(const skullPuzzleData& spData, int16 mouseX=-1, int16 mouseY=-1);
+	void drawSkullPuzzleTile(uint16 col, uint16 row, uint16 xoffs, uint16 yoffs, const skullPuzzleData& spData);
+	bool skullPuzzleCheckSolution(const skullPuzzleData& spData);
+	void skullPuzzleMoveHorz(uint16 row, int16 dir, skullPuzzleData& spData);
+	void skullPuzzleMoveVert(uint16 col, int16 dir, skullPuzzleData& spData);
 	//
 
 	void drawIllsmouthTitle();

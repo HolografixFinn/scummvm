@@ -23,7 +23,7 @@
 #ifndef COMET_ARCHIVESMANAGER_H
 #define COMET_ARCHIVESMANAGER_H
 #include "common/scummsys.h"
-
+#include "common/ptr.h"
 
 namespace Cometengine {
 	class CometEngine;
@@ -33,7 +33,8 @@ namespace Cometengine {
 		ArchivesManager(CometEngine *vm);
 		~ArchivesManager();
 		void getFile(const char *archiveName, uint16 fileNum, uint8 *destBuffer, uint32 *decomSize=nullptr);
-		uint8 * allocateAndGetFile(const char *archiveName, uint16 fileNum, uint32 *decomSize = nullptr);
+//		uint8 * allocateAndGetFile(const char *archiveName, uint16 fileNum, uint32 *decomSize = nullptr);
+		Common::SharedPtr<uint8> allocateAndGetFile(const char* archiveName, uint16 fileNum, uint32* decomSize = nullptr);
 		void readFileBlock(const char *filename, uint8 block, char *buffer, uint32 size);
 		bool checkValidSubfile(const char *archiveName, uint16 fileNum);
 

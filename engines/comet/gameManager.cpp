@@ -25,6 +25,7 @@
 #include "common/events.h"
 #include "common/savefile.h"
 #include "common\serializer.h"
+#include "common/std/vector.h"
 #include "engines/advancedDetector.h"
 
 #define _COMET_CTRL 0x04
@@ -41,7 +42,7 @@ namespace Cometengine {
 GameManager::GameManager(CometEngine *vm) : _vm(vm), handleQuit(nullptr),
 											_movementStatus(0), _movementStatus2(0), _lastPressedKey(Common::KeyCode::KEYCODE_INVALID), _mouseButtons(0), _specialKeys(0),
 											_evtMgr(vm->_system->getEventManager()), _keysFlags(),
-											_resPakData(nullptr), _fontData(nullptr),
+											_resPakData(nullptr), //_fontData(nullptr),
 											_rnd("comet"),
 											_mainActor(0), _NPCActors(0),
 											_topWalkAreaLineStrip(),
@@ -65,10 +66,13 @@ GameManager::GameManager(CometEngine *vm) : _vm(vm), handleQuit(nullptr),
 											_numMenusOnScreen(0),
 											_lastDiskMenuSelectedItem(0), _lastSettingsMenuSelectedItem(0),
 											//copy protection stuff
-											_copyProtectionTitleSentence(nullptr), _copyProtectionInstructionsSentence(nullptr), _copyProtectionsConstellationsData(), _copyProtectionStarsGraphics(nullptr),
-											_copyProtectionRightConstellationRow(0), _copyProtectionRightConstellationColumn(0), _copyProtectionDisplayedConstellationsData(),
-											_copyProtectionNumColumns(11), _copyProtectionNumRows(16),
-											_zoomRestored(false), skullTilesState(), skullCursorX(0), skullCursorY(0), skullPuzzleData(nullptr), forceLoading(0), defaultLanguage(0) {
+											//_copyProtectionTitleSentence(nullptr),
+	//_copyProtectionInstructionsSentence(nullptr), _copyProtectionsConstellationsData(), //_copyProtectionStarsGraphics(nullptr),
+											//_copyProtectionRightConstellationRow(0), _copyProtectionRightConstellationColumn(0), _copyProtectionDisplayedConstellationsData(),
+											//_copyProtectionNumColumns(11), _copyProtectionNumRows(16),
+											_zoomRestored(false),
+	//skullTilesState(), skullCursorX(0), skullCursorY(0), skullPuzzleData(nullptr),
+		forceLoading(0), defaultLanguage(0) {
 	if (_vm->isComet()) {
 		if (_vm->isCD()) {
 			_startPakNumber = 9; //5
@@ -295,28 +299,83 @@ uint32 GameManager::getKeySpecialFunction(Common::KeyCode code) {
 }
 void GameManager::loadResPak() {
 	if (!_vm->isCD()) {
-		_resPakData = _vm->_archMgr->allocateAndGetFile("RES.PAK", 0);
-		_fontData = _resPakData + READ_LE_UINT32(_resPakData);
+		// monolithic resource pak, old floppy version
+		uint32 resSize = 0;
+		auto _monolithicResScPtr = std::move(_vm->_archMgr->allocateAndGetFile("RES.PAK", 0, &resSize));
+		auto tmpResPtr = _monolithicResScPtr.get();
+		Std::vector<uint32> offsets(8, 0);
+		Std::vector<uint32> sizes(7, 0);
+		Std::vector<Common::SharedPtr<uint8>> stdResources{};
+		for (uint8 i = 0; i<7; i++) {
+			
+			offsets[i] = READ_LE_UINT32(tmpResPtr+(i*4));
+		}
+		offsets[7]=resSize;
+		for (uint8 i = 0; i < 7; i++) {
 
-		this->_vm->_gMgr->setBasicResources(_resPakData + READ_LE_UINT32(_resPakData + 4), _resPakData + READ_LE_UINT32(_resPakData + 8), _resPakData + READ_LE_UINT32(_resPakData + 12), _resPakData + READ_LE_UINT32(_resPakData + 16));
-		this->_vm->_gMgr->initializePalette(_resPakData + READ_LE_UINT32(_resPakData + 20), _resPakData + READ_LE_UINT32(_resPakData + 24));
+			sizes[i] = offsets[i + 1] - offsets[i];
+		}
+		for (uint8 i = 0; i < 7; i++) {
+			stdResources.emplace_back(new uint8[sizes[i]], Common::ArrayDeleter<uint8>());
+			memcpy(stdResources[i].get(), tmpResPtr + offsets[i], sizes[i]);
+		}
+		_fontScPtr = stdResources[0];
+//		_fontData = _fontScPtr.get();
+		this->_vm->_gMgr->setBasicResources(stdResources[1], stdResources[2], stdResources[3], stdResources[4]);
+		this->_vm->_gMgr->initializePalette(stdResources[5], stdResources[6]);
+		/*
+		uint32 fontDataOffs = READ_LE_UINT32(tmpResPtr), speechBoxDataOffs = READ_LE_UINT32(tmpResPtr + 4), mainWalkDataOffs = READ_LE_UINT32(tmpResPtr + 8),
+			iconsDataOffs = READ_LE_UINT32(tmpResPtr + 12), objectsDataOffs = READ_LE_UINT32(tmpResPtr + 16), mainPaletteDataOffs = READ_LE_UINT32(tmpResPtr + 20),
+			sepiaPaletteDataOffs = READ_LE_UINT32(tmpResPtr + 24);
+		uint32 fontDataSize = speechBoxDataOffs - fontDataOffs, speechBoxDataSize = mainWalkDataOffs - speechBoxDataOffs,
+			mainWalkDataSize = iconsDataOffs - mainWalkDataOffs, iconsDataSize = objectsDataOffs - iconsDataOffs,
+			iconsDataSize = mainPaletteDataOffs - iconsDataOffs, mainPaletteDataSize = sepiaPaletteDataOffs - mainPaletteDataOffs,
+			sepiaPaletteDataSize = resSize - sepiaPaletteDataOffs;
+		//_resPakData = _vm->_archMgr->allocateAndGetFile("RES.PAK", 0);
+		*/	
+
+//		this->_vm->_gMgr->setBasicResources(tmpResPtr + READ_LE_UINT32(tmpResPtr + 4), tmpResPtr + READ_LE_UINT32(tmpResPtr + 8), tmpResPtr + READ_LE_UINT32(tmpResPtr + 12), tmpResPtr + READ_LE_UINT32(tmpResPtr + 16));
+//		this->_vm->_gMgr->initializePalette(tmpResPtr + READ_LE_UINT32(tmpResPtr + 20), tmpResPtr + READ_LE_UINT32(tmpResPtr + 24));
 	} else {
-		_fontData = _vm->_archMgr->allocateAndGetFile("RES.PAK", 0);
+		_fontScPtr = _vm->_archMgr->allocateAndGetFile("RES.PAK", 0);
+		// _fontData = _fontScPtr.get();
+		auto speech = _vm->_archMgr->allocateAndGetFile("RES.PAK", 1);
+		auto walk = _vm->_archMgr->allocateAndGetFile("RES.PAK", 2);
+		auto icons = _vm->_archMgr->allocateAndGetFile("RES.PAK", 3);
+		auto objects = _vm->_archMgr->allocateAndGetFile("RES.PAK", 4);
+		/*
 		this->_vm->_gMgr->setBasicResources(
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 1), //speech box
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 2), //parker walk
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 3), //icons
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 4)  //objects
 		);
-		_vm->_moMgr->loadCursorsGraphics(_vm->_archMgr->allocateAndGetFile("RES.PAK", 9), 7);
+		*/
+		this->_vm->_gMgr->setBasicResources(
+			speech, walk, icons, objects
+
+		);
+		_cursorsScPtr = _vm->_archMgr->allocateAndGetFile("RES.PAK", 9);
+//		_vm->_moMgr->loadCursorsGraphics(_vm->_archMgr->allocateAndGetFile("RES.PAK", 9), 7);
+		_vm->_moMgr->loadCursorsGraphics(_cursorsScPtr.get(), 7);
 		updateFontDataAndColor(0);
+
+		auto pmain = _vm->_archMgr->allocateAndGetFile("RES.PAK", 5);
+		auto psepia = _vm->_archMgr->allocateAndGetFile("RES.PAK", 6);
+		auto pcdintro = _vm->_archMgr->allocateAndGetFile("RES.PAK", 7);
+		auto pextra = _vm->_archMgr->allocateAndGetFile("RES.PAK", 8);
+		/*
 		this->_vm->_gMgr->initializePalette(
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 5), //main palette
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 6), //flashback palette
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 7), //cd intro palette
 			_vm->_archMgr->allocateAndGetFile("RES.PAK", 8)  //another palette
 		);
-//		_vm->_moMgr->setMouseCursor(5);
+		*/
+		this->_vm->_gMgr->initializePalette(
+			pmain, psepia, pcdintro, pextra
+		);
+		//		_vm->_moMgr->setMouseCursor(5);
 //		_vm->_moMgr->setMouseVisibility(true);
 	}
 	initAllResources();
@@ -354,7 +413,7 @@ void GameManager::initAllResources() {
 }
 void GameManager::updateFontDataAndColor(uint8 color) {
 	//ok
-	this->_vm->_txtMgr->setFontDataAndColor(this->_fontData, color);
+	this->_vm->_txtMgr->setFontDataAndColor(this->_fontScPtr.get(), color);
 }
 void GameManager::unlockMainActor() {
 	_vm->_gameState.movementMask = 0;
@@ -437,6 +496,7 @@ void GameManager::killAllNPCs() {
 	}
 }
 void GameManager::showLoopedAnimation(uint8 subfile, uint8 anim, int16 frame_flags, uint8 numLoops, uint8 numDigiFX, const char *cues) {
+	Common::SharedPtr<uint8> subfileSP{};
 	uint8 *subfileData = nullptr;
 	uint8 *paletteData = nullptr;
 	uint8 *animData = nullptr;
@@ -448,7 +508,8 @@ void GameManager::showLoopedAnimation(uint8 subfile, uint8 anim, int16 frame_fla
 	const char *cuesStart;
 	uint8 startNumDigi = numDigiFX;
 	_vm->_gMgr->resetFullscreenViewport();
-	subfileData = _vm->_gmMgr->priorityAllocateAndGetFile(_animsFilename, subfile);
+	subfileSP = _vm->_gmMgr->priorityAllocateAndGetFile(_animsFilename, subfile);
+	subfileData = subfileSP.get();
 	if (READ_LE_UINT16(subfileData + 2) == 0 && READ_LE_UINT16(subfileData) == 20) {
 		hasPalette = 1;
 		paletteData = _vm->_gMgr->getTypeData(4, subfileData);
@@ -461,7 +522,7 @@ void GameManager::showLoopedAnimation(uint8 subfile, uint8 anim, int16 frame_fla
 	} else if (frame_flags < 0) {
 		_vm->_gMgr->decodeFrame(-frame_flags, 0, 0, subfileData);
 	} else if (frame_flags < 0x7d00) {
-		_vm->_gMgr->decodeFrame(frame_flags, 0, 0, _vm->_gMgr->_stageAnims);
+		_vm->_gMgr->decodeFrame(frame_flags, 0, 0, _vm->_gMgr->_stageAnims.get());
 	} else if (frame_flags == 0x7d00) {
 		_vm->_gMgr->copyVideoBuffer(_vm->_gMgr->lockMainSurface(), _vm->_gMgr->_videoBackbuffer);
 		_vm->_gMgr->unlockMainSurface();
@@ -493,7 +554,8 @@ void GameManager::showLoopedAnimation(uint8 subfile, uint8 anim, int16 frame_fla
 			_vm->_txtMgr->handleOnScreenText();
 			if (hasPalette == 1) {
 				hasPalette = 2;
-				_vm->_gMgr->uploadPalette(paletteData);
+				_vm->_gMgr->uploadPalette(GraphicsManager::PALETTES::CUSTOM,paletteData);
+//				_vm->_gMgr->uploadPalette(paletteData);
 			}
 			_vm->_gMgr->paintBackbuffer_mouse();
 			if (numDigiFX != 0 && currFrame == nextCue) {
@@ -531,9 +593,10 @@ void GameManager::showLoopedAnimation(uint8 subfile, uint8 anim, int16 frame_fla
 			break;
 		}
 	}
-	delete[] subfileData;
+//	delete[] subfileData;
 	if (hasPalette != 0) {
-		_vm->_gMgr->uploadPalette(_vm->_gMgr->tmpPalette);
+//		_vm->_gMgr->uploadPalette(_vm->_gMgr->tmpPalette);
+		_vm->_gMgr->uploadPalette(GraphicsManager::PALETTES::TMP);
 	}
 	if (_vm->_txtMgr->isTextDisplayed()) {
 		_vm->_txtMgr->hideDialogue();
@@ -563,16 +626,16 @@ uint8 GameManager::getResourceIdx(uint8 type, uint8 fileIdx) {
 	}
 	return resourceIdx;
 }
-uint8 *GameManager::priorityAllocateAndGetFile(const char *archiveName, uint16 fileNum) {
-	uint8 *data = 0;
+Common::SharedPtr<uint8> GameManager::priorityAllocateAndGetFile(const char *archiveName, uint16 fileNum) {
+	Common::SharedPtr<uint8> data = nullptr;
 	data = _vm->_archMgr->allocateAndGetFile(archiveName, fileNum);
-	if (data == 0) {
+	if (data == nullptr) {
 		clearUnusedResources();
 		data = _vm->_archMgr->allocateAndGetFile(archiveName, fileNum);
-		if (data == 0) {
+		if (data == nullptr) {
 			freeUnusedAnimResources();
 			data = _vm->_archMgr->allocateAndGetFile(archiveName, fileNum);
-			if (data == 0) {
+			if (data == nullptr) {
 			}
 		}
 	}
@@ -580,15 +643,16 @@ uint8 *GameManager::priorityAllocateAndGetFile(const char *archiveName, uint16 f
 }
 void GameManager::freeUnusedAnimResources() {
 	for (uint8 i = 0; i < 20; i++) {
-		if (_vm->_gameState.resources[i].type == 0 && _vm->_gameState.resources[i].data != 0) {
-			delete[] _vm->_gameState.resources[i].data;
+		if (_vm->_gameState.resources[i].type == 0 && _vm->_gameState.resources[i].data != nullptr) {
+//			delete[] _vm->_gameState.resources[i].data;
+			_vm->_gameState.resources[i].data.reset();
 		}
 	}
 	reloadResources();
 }
 void GameManager::reloadResources() {
 	for (uint8 i = 0; i < 20; i++) {
-		if (_vm->_gameState.resources[i].type == 0 && _vm->_gameState.resources[i].data != nullptr) {
+		if (_vm->_gameState.resources[i].type == 0 && _vm->_gameState.resources[i].needsReloading){ // _vm->_gameState.resources[i].data != nullptr) {
 			//BUG: the original game does not check if the subfile is valid.
 			if (_vm->_archMgr->checkValidSubfile(_animsFilename, _vm->_gameState.resources[i].fileIdx)) {
 				_vm->_gameState.resources[i].data = priorityAllocateAndGetFile(_animsFilename, _vm->_gameState.resources[i].fileIdx);
@@ -622,8 +686,9 @@ void GameManager::clearUnusedResources() {
 	for (uint8 i = 0; i < 20; i++) {
 		if (_vm->_gameState.resources[i].data != nullptr && _vm->_gameState.resources[i].type == 0 && (!isResourceUsedByActor(i))) {
 			removeResourceFromActors(i);
-			delete[] _vm->_gameState.resources[i].data;
-			_vm->_gameState.resources[i].data = nullptr;
+//			delete[] _vm->_gameState.resources[i].data;
+//			_vm->_gameState.resources[i].data = nullptr;
+			_vm->_gameState.resources[i].data.reset();
 		}
 	}
 }
@@ -677,7 +742,7 @@ void GameManager::actorPrepareAnimation(Actor *actor, uint8 animationIdx) {
 	if (actor->resourceIdx == -1) {
 		actor->numFrames = 0;
 	} else {
-		uint8 *animationData = _vm->_gMgr->getAnimData(animationIdx, _vm->_gameState.resources[actor->resourceIdx].data);
+		uint8 *animationData = _vm->_gMgr->getAnimData(animationIdx, _vm->_gameState.resources[actor->resourceIdx].data.get());
 		actor->numFrames = *(animationData + 1);
 	}
 	actor->frameToDraw = 0;
@@ -1029,16 +1094,18 @@ void GameManager::freeResourcesExceptMainActor() {
 	for (uint8 i = 0; i < 20; i++) {
 		if (_vm->_gameState.resources[i].data != nullptr && _vm->_gameState.resources[i].type == 0 && i != _mainActor->resourceIdx) {
 			removeResourceFromActors(i);
-			delete[] _vm->_gameState.resources[i].data;
-			_vm->_gameState.resources[i].data = nullptr;
+//			delete[] _vm->_gameState.resources[i].data;
+//			_vm->_gameState.resources[i].data = nullptr;
+			_vm->_gameState.resources[i].data.reset();
 		}
 	}
 }
 void GameManager::freeStageResources() {
 	freeResourcesExceptMainActor();
 	if (_vm->_gMgr->_stageAnims != nullptr) {
-		delete[] _vm->_gMgr->_stageAnims;
-		_vm->_gMgr->_stageAnims = nullptr;
+//		delete[] _vm->_gMgr->_stageAnims;
+//		_vm->_gMgr->_stageAnims = nullptr;
+		_vm->_gMgr->_stageAnims.reset();
 	}
 }
 void GameManager::loadAndExecuteNewRoom() {
@@ -1074,9 +1141,10 @@ void GameManager::hideTextAndFreeStageResources() {
 	hideText();
 	freeResourcesExceptMainActor();
 	if (_vm->_gMgr->_stageAnims != nullptr) {
-		delete[] _vm->_gMgr->_stageAnims;
+//		delete[] _vm->_gMgr->_stageAnims;
 		//TODO capire come mai
-		_vm->_gMgr->_stageAnims = nullptr;
+//		_vm->_gMgr->_stageAnims = nullptr;
+		_vm->_gMgr->_stageAnims.reset();
 	}
 }
 void GameManager::hideText() {
@@ -1123,8 +1191,10 @@ void GameManager::handleRoomsTransition(uint8 prevRoom, int8 prevPak) {
 		}
 	}
 	if (_vm->_gMgr->getFadeStatus() == 0) {
-		_vm->_gMgr->fadePalette(_vm->_gMgr->mainGamePalette, _vm->_gMgr->tmpPalette, _vm->_gameState.paletteFadeLevel, 256);
-		_vm->_gMgr->uploadPalette(_vm->_gMgr->tmpPalette);
+//		_vm->_gMgr->fadePalette(_vm->_gMgr->mainGamePalette, _vm->_gMgr->tmpPalette, _vm->_gameState.paletteFadeLevel, 256);
+//		_vm->_gMgr->uploadPalette(_vm->_gMgr->tmpPalette);
+		_vm->_gMgr->fadePalette(GraphicsManager::PALETTES::MAIN, GraphicsManager::PALETTES::TMP, _vm->_gameState.paletteFadeLevel, 256);
+		_vm->_gMgr->uploadPalette(GraphicsManager::PALETTES::TMP);
 	}
 }
 Actor *GameManager::getActor(uint8 actorIdx) {
@@ -1284,7 +1354,7 @@ void GameManager::handleActorAnimation(Actor *actor) {
 		actorPrepareAnimation(actor, animIdx);
 	} else {
 		if (actor->fixedAnimationFrame == -1) {
-			uint8 *animPtr = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data) + 2;
+			uint8 *animPtr = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data.get()) + 2;
 			uint16 factor = READ_LE_UINT16(animPtr + ((actor->frameToDraw * 8) + 2));
 			uint16 decodeType = factor >> 14;
 			factor &= 0x3fff;
@@ -1313,7 +1383,7 @@ void GameManager::handlePortraitAnimation(Actor *actor) {
 	//but we can't do it here ;)
 	if (actor->resourceIdx >= 0) {
 		if (actor->fixedAnimationFrame == -1) {
-			uint8 *animPtr = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data) + 2;
+			uint8 *animPtr = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data.get()) + 2;
 			uint16 factor = READ_LE_UINT16(animPtr + ((actor->frameToDraw * 8) + 2));
 			uint16 decodeType = factor >> 14;
 			factor &= 0x3fff;
@@ -1555,7 +1625,7 @@ bool GameManager::handleActorWalk(uint8 actorIdx) {
 	}
 	int16 pivotX = actor->pivotX;
 	int16 pivotY = actor->pivotY;
-	uint8 *animData = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data) + 2;
+	uint8 *animData = _vm->_gMgr->getAnimData(actor->animationIdx, _vm->_gameState.resources[actor->resourceIdx].data.get()) + 2;
 	int16 frameX = READ_LE_INT16(animData + (actor->frameToDraw * 8) + 4);
 	int16 frameY = READ_LE_INT16(animData + (actor->frameToDraw * 8) + 6);
 	adjustWalkAnimCoords(actor->facingDirection, frameX, frameY);
@@ -1900,22 +1970,24 @@ bool GameManager::copyProtection() {
 	int8 currSelectionBorderColorStep = 1;
 	uint8 randConstellationColumn = 0;
 	uint8 randConstellationRow = 0;
-	_copyProtectionTitleSentence = new char[50];
-	_copyProtectionInstructionsSentence = new char[50];
-	_vm->_txtMgr->getSentence(2, 0x27, _copyProtectionInstructionsSentence);
-	_copyProtectionStarsGraphics = _vm->_archMgr->allocateAndGetFile("A05.PAK", 19);
-	uint8 *tmp = _vm->_archMgr->allocateAndGetFile("A05.PAK", 18);
+//	auto _copyProtectionTitleSentence = new char[50];
+//	_copyProtectionInstructionsSentence = new char[50];
+	CopyProtectionData cpData;
+	_vm->_txtMgr->getSentence(2, 0x27, cpData.copyProtectionInstructionsSentence);
+	cpData.copyProtectionStarsGraphics = _vm->_archMgr->allocateAndGetFile("A05.PAK", 19);
+	auto tmp = _vm->_archMgr->allocateAndGetFile("A05.PAK", 18);
 	//	uint16 size = 11 * 16 * sizeof(Constellation);
-	memcpy(_copyProtectionsConstellationsData, tmp, 11 * 16 * sizeof(Constellation));
-	delete[] tmp;
+	memcpy(cpData.copyProtectionsConstellationsData, tmp.get(), 11 * 16 * sizeof(Constellation));
+	//delete[] tmp;
+	tmp.reset();
 	//		_copyProtectionInstructionsSentence++;
 	uint8 numRightAnswers = 0;
 	uint8 numErrors = 0;
 	while (numRightAnswers < 2 && numErrors != 3) {
-		_vm->_txtMgr->getSentence(2, 0x25 + numErrors, _copyProtectionTitleSentence);
+		_vm->_txtMgr->getSentence(2, 0x25 + numErrors, cpData.copyProtectionTitleSentence);
 		//			_copyProtectionTitleSentence++;
-		_copyProtectionRightConstellationColumn = getRandom(11);
-		_copyProtectionRightConstellationRow = getRandom(16);
+		cpData.copyProtectionRightConstellationColumn = getRandom(11);
+		cpData.copyProtectionRightConstellationRow = getRandom(16);
 		uint8 copyProtectionRightX = getRandom(3);
 		uint8 copyProtectionRightY = getRandom(3);
 
@@ -1925,22 +1997,22 @@ bool GameManager::copyProtection() {
 					randConstellationColumn = getRandom(11);
 					randConstellationRow = getRandom(16);
 					if (x == copyProtectionRightX && y == copyProtectionRightY) {
-						_copyProtectionDisplayedConstellationsData[(y * 3) + x] = _copyProtectionsConstellationsData[(_copyProtectionRightConstellationRow * _copyProtectionNumColumns) + _copyProtectionRightConstellationColumn];
+						cpData.copyProtectionDisplayedConstellationsData[(y * 3) + x] = cpData.copyProtectionsConstellationsData[(cpData.copyProtectionRightConstellationRow * cpData.copyProtectionNumColumns) + cpData.copyProtectionRightConstellationColumn];
 					} else {
-						_copyProtectionDisplayedConstellationsData[(y * 3) + x] = _copyProtectionsConstellationsData[(randConstellationRow * _copyProtectionNumColumns) + randConstellationColumn];
+						cpData.copyProtectionDisplayedConstellationsData[(y * 3) + x] = cpData.copyProtectionsConstellationsData[(randConstellationRow * cpData.copyProtectionNumColumns) + randConstellationColumn];
 					}
-				} while (randConstellationColumn == _copyProtectionRightConstellationColumn && randConstellationRow == _copyProtectionRightConstellationRow);
+				} while (randConstellationColumn == cpData.copyProtectionRightConstellationColumn && randConstellationRow == cpData.copyProtectionRightConstellationRow);
 			}
 		}
 
-		drawCopyProtection(numRightAnswers);
+		drawCopyProtection(numRightAnswers, cpData);
 		_vm->_gMgr->setFadeSpeed(10);
 		_vm->_gMgr->dealFadeIn();
 		uint8 currY = 0;
 		uint8 currX = 0;
 		bool isEnterPressed = false;
 		while (isEnterPressed == false) {
-			drawCopyProtection(numRightAnswers);
+			drawCopyProtection(numRightAnswers, cpData);
 			_vm->_gMgr->drawRectangleOutline((currX * 48) + 86, (currY * 48) + 10, (currX * 48) + 130, (currY * 48) + 54, currSelectionBorderColor);
 			currSelectionBorderColor += currSelectionBorderColorStep;
 			if (currSelectionBorderColor == 0x3f) {
@@ -2011,42 +2083,42 @@ bool GameManager::copyProtection() {
 			numErrors++;
 		}
 	}
-	delete[] _copyProtectionStarsGraphics;
-	_copyProtectionStarsGraphics = nullptr;
-	delete[] _copyProtectionInstructionsSentence;
-	_copyProtectionInstructionsSentence = nullptr;
-	delete[] _copyProtectionTitleSentence;
-	_copyProtectionTitleSentence = nullptr;
+//	delete[] _copyProtectionStarsGraphics;
+//	_copyProtectionStarsGraphics = nullptr;
+//	delete[] _copyProtectionInstructionsSentence;
+//	_copyProtectionInstructionsSentence = nullptr;
+//	delete[] _copyProtectionTitleSentence;
+//	_copyProtectionTitleSentence = nullptr;
 	waitForNoInput();
 	if (numErrors == 0) {
 		return true;
 	}
 	return false;
 }
-void GameManager::drawCopyProtection(uint8 numRightAnswers) {
+void GameManager::drawCopyProtection(uint8 numRightAnswers, const CopyProtectionData & cpData) {
 	char buf[4];
 	uint16 xOffset;
 	uint8 y;
 	uint8 stringWidth;
 	strncpy(buf, "A", 4);
-	_vm->_gMgr->decodeFrame(0, 0, 0, _copyProtectionStarsGraphics);
+	_vm->_gMgr->decodeFrame(0, 0, 0, cpData.copyProtectionStarsGraphics.get());
 	y = 160;
-	stringWidth = _vm->_txtMgr->calcStringWidth(_copyProtectionTitleSentence + 1);
+	stringWidth = _vm->_txtMgr->calcStringWidth(cpData.copyProtectionTitleSentence + 1);
 	xOffset = (_COMET_XRESOLUTION - stringWidth) / 2;
-	_vm->_txtMgr->drawOutlinedString(xOffset, y, _copyProtectionTitleSentence + 1, 0xc1, 0x5d);
+	_vm->_txtMgr->drawOutlinedString(xOffset, y, cpData.copyProtectionTitleSentence + 1, 0xc1, 0x5d);
 	y = 180;
-	stringWidth = _vm->_txtMgr->calcStringWidth(_copyProtectionInstructionsSentence + 1);
+	stringWidth = _vm->_txtMgr->calcStringWidth(cpData.copyProtectionInstructionsSentence + 1);
 	xOffset = (_COMET_XRESOLUTION - stringWidth - 20) / 2;
-	buf[0] = _copyProtectionRightConstellationColumn + 0x41;
-	_vm->_txtMgr->drawOutlinedString(xOffset, y, _copyProtectionInstructionsSentence + 1, 0xc1, 0x5d);
+	buf[0] = cpData.copyProtectionRightConstellationColumn + 0x41;
+	_vm->_txtMgr->drawOutlinedString(xOffset, y, cpData.copyProtectionInstructionsSentence + 1, 0xc1, 0x5d);
 	_vm->_txtMgr->drawOutlinedString(xOffset + stringWidth + 10, y, buf, 0xc1, 0x5d);
-	_vm->_txtMgr->drawOutlinedString(xOffset + stringWidth + 20, y, _vm->_txtMgr->printDecimalNumber(_copyProtectionRightConstellationRow + 1), 0xc1, 0x5d);
+	_vm->_txtMgr->drawOutlinedString(xOffset + stringWidth + 20, y, _vm->_txtMgr->printDecimalNumber(cpData.copyProtectionRightConstellationRow + 1), 0xc1, 0x5d);
 	for (uint8 x = 0; x < 3; x++) {
 		for (uint8 _y = 0; _y < 3; _y++) {
 			_vm->_gMgr->setDrawAreaX((x * 48) + 88, (x * 48) + 128);
 			_vm->_gMgr->setDrawAreaY((_y * 48) + 12, (_y * 48) + 52);
-			for (uint8 i = 0; i < _copyProtectionDisplayedConstellationsData[(_y * 3) + x].numStars; i++) {
-				_vm->_gMgr->decodeFrame(_copyProtectionDisplayedConstellationsData[(_y * 3) + x].stars[i].frameIdx, _copyProtectionDisplayedConstellationsData[(_y * 3) + x].stars[i].x + (x * 48) + 88, _copyProtectionDisplayedConstellationsData[(_y * 3) + x].stars[i].y + (_y * 48) + 12, _copyProtectionStarsGraphics);
+			for (uint8 i = 0; i < cpData.copyProtectionDisplayedConstellationsData[(_y * 3) + x].numStars; i++) {
+				_vm->_gMgr->decodeFrame(cpData.copyProtectionDisplayedConstellationsData[(_y * 3) + x].stars[i].frameIdx, cpData.copyProtectionDisplayedConstellationsData[(_y * 3) + x].stars[i].x + (x * 48) + 88, cpData.copyProtectionDisplayedConstellationsData[(_y * 3) + x].stars[i].y + (_y * 48) + 12, cpData.copyProtectionStarsGraphics.get());
 			}
 		}
 	}
@@ -2289,7 +2361,7 @@ void GameManager::handleMap() {
 			_vm->_moMgr->warpMouse(mapCurrXPos, mapCurrYPos);
 
 		}
-		_vm->_gMgr->decodeFrame(0x32, 0, 0, _vm->_gMgr->_iconsGraphics);
+		_vm->_gMgr->decodeFrame(0x32, 0, 0, _vm->_gMgr->iconsGraphics());
 		if (_lastPressedKey == Common::KeyCode::KEYCODE_ESCAPE) {
 			retVal = 1;
 		}
@@ -2336,7 +2408,7 @@ void GameManager::handleMap() {
 			}
 		}
 		if (isHotspot == 0) {
-			_vm->_gMgr->decodeFrame(0x33, mapCurrXPos, mapCurrYPos, _vm->_gMgr->_iconsGraphics);
+			_vm->_gMgr->decodeFrame(0x33, mapCurrXPos, mapCurrYPos, _vm->_gMgr->iconsGraphics());
 		}
 		_vm->_gMgr->paintBackbuffer_mouse();
 	}
@@ -3374,8 +3446,10 @@ void GameManager::loadFileAndInit(CometXorSerializer &s) {
 	_vm->_scMgr->loadAndPrepareRoomScripts(_roomsFilename, _vm->_gameState.currRoomNum, true);
 	_vm->_gMgr->loadStage(true);
 	reloadResources();
-	_vm->_gMgr->fadePalette(_vm->_gMgr->mainGamePalette, _vm->_gMgr->tmpPalette, _vm->_gameState.paletteFadeLevel, 256);
-	_vm->_gMgr->uploadPalette(_vm->_gMgr->tmpPalette);
+//	_vm->_gMgr->fadePalette(_vm->_gMgr->mainGamePalette, _vm->_gMgr->tmpPalette, _vm->_gameState.paletteFadeLevel, 256);
+//	_vm->_gMgr->uploadPalette(_vm->_gMgr->tmpPalette);
+	_vm->_gMgr->fadePalette(GraphicsManager::PALETTES::MAIN, GraphicsManager::PALETTES::TMP, _vm->_gameState.paletteFadeLevel, 256);
+	_vm->_gMgr->uploadPalette(GraphicsManager::PALETTES::TMP);
 	if (_vm->_gameState.paletteRedTintFactor != 0) {
 		_vm->_gMgr->setPaletteTint(_vm->_gameState.paletteRedTintFactor);
 	}
@@ -3468,9 +3542,14 @@ uint8 GameManager::handleLoad() {
 			_vm->_gMgr->clearBackbuffer();
 			_vm->_gMgr->paintBackbuffer_mouse();
 			if (_vm->_gameState.isAlternatePaletteActive) {
+/*
 				memcpy(_vm->_gMgr->mainGamePalette, _vm->_gMgr->normalPalette, 0x300);
 				memcpy(_vm->_gMgr->tmpPalette, _vm->_gMgr->normalPalette, 0x300);
 				_vm->_gMgr->uploadPalette(_vm->_gMgr->mainGamePalette);
+				*/
+				_vm->_gMgr->copyPalette(GraphicsManager::PALETTES::NORMAL, GraphicsManager::PALETTES::MAIN);
+				_vm->_gMgr->copyPalette(GraphicsManager::PALETTES::NORMAL, GraphicsManager::PALETTES::TMP);
+				_vm->_gMgr->uploadPalette(GraphicsManager::PALETTES::MAIN);
 				_vm->_gameState.isAlternatePaletteActive = 0;
 			}
 			_vm->_txtMgr->hideText();
@@ -3918,7 +3997,7 @@ uint8 GameManager::handleQuit_CD() {
 		if (_vm->isQuitRequested()) {
 			return 0;
 		}
-		_vm->_gMgr->decodeFrame(_vm->_gameState.selectedLanguageID + 94, 0, 0,  _vm->_gMgr->_iconsGraphics);
+		_vm->_gMgr->decodeFrame(_vm->_gameState.selectedLanguageID + 94, 0, 0,  _vm->_gMgr->iconsGraphics());
 		uint8* prevBB = _vm->_gMgr->getBackbuffer();
 //		uint8* vga = _vm->_gMgr->lockMainSurface();
 //		_vm->_gMgr->setBackbuffer(vga);
@@ -4197,8 +4276,9 @@ void GameManager::freeResourceFromCharacter(Actor *act) {
 		if (r->data != nullptr && r->type == 0) {
 			if (!isResourceUsedByActor(resourceIdx)) {
 				removeResourceFromActors(resourceIdx);
-				delete[] r->data;
-				r->data = nullptr;
+//				delete[] r->data;
+//				r->data = nullptr;
+				r->data.reset();
 			}
 		}
 	}
@@ -4377,20 +4457,21 @@ void GameManager::onUseObject() {
 	}
 }
 uint16 GameManager::handleSkullPuzzle() {
+	skullPuzzleData spData;
 	uint16 done = 0;
 	int16 skullMouseX = -1, skullMouseY = -1;
 	int16 skullMouseTarget = 0;
 	if (_vm->isCD()) {
 		_vm->_moMgr->setMouseVisibility(false);
 	}
-	memcpy(skullTilesState, skullInitialTilesState, 6 * 6 * sizeof(uint16));
-	skullPuzzleData = _vm->_archMgr->allocateAndGetFile("A07.PAK", 0x18);
+	memcpy(spData.skullTilesState, skullInitialTilesState, 6 * 6 * sizeof(uint16));
+	spData.skullPuzzleData = _vm->_archMgr->allocateAndGetFile("A07.PAK", 0x18);
 	if (_vm->isCD()) {
 		_vm->_audioMgr->stopDigi();
 		_vm->_audioMgr->loadDigiSubfile(0x4b);
 	}
-	skullCursorX = 0;
-	skullCursorY = 0;
+	spData.skullCursorX = 0;
+	spData.skullCursorY = 0;
 	while (done == 0) {
 		updateInputStatus();
 		if (_vm->isQuitRequested()) {
@@ -4420,35 +4501,35 @@ uint16 GameManager::handleSkullPuzzle() {
 			skullMouseTarget = _vm->_moMgr->getCurrentTarget(MouseManager::Targets::SKULLPUZZLE, 21, -1);
 			if (skullMouseTarget >= 0) {
 				switch (skullMouseTarget) {
-				case 0x00: skullCursorX = 1; skullCursorY = 0; break;
-				case 0x01: skullCursorX = 2; skullCursorY = 0; break;
-				case 0x02: skullCursorX = 3; skullCursorY = 0; break;
-				case 0x03: skullCursorX = 4; skullCursorY = 0; break;
-				case 0x04: skullCursorX = 5; skullCursorY = 1; break;
-				case 0x05: skullCursorX = 5; skullCursorY = 2; break;
-				case 0x06: skullCursorX = 5; skullCursorY = 3; break;
-				case 0x07: skullCursorX = 5; skullCursorY = 4; break;
-				case 0x08: skullCursorX = 1; skullCursorY = 5; break;
-				case 0x09: skullCursorX = 2; skullCursorY = 5; break;
-				case 0x0a: skullCursorX = 3; skullCursorY = 5; break;
-				case 0x0b: skullCursorX = 4; skullCursorY = 5; break;
-				case 0x0c: skullCursorX = 0; skullCursorY = 1; break;
-				case 0x0d: skullCursorX = 0; skullCursorY = 2; break;
-				case 0x0e: skullCursorX = 0; skullCursorY = 3; break;
-				case 0x0f: skullCursorX = 0; skullCursorY = 4; break;
-				case 0x10: skullCursorX = 0; skullCursorY = 0; break;
-				case 0x11: skullCursorX = 5; skullCursorY = 0; break;
-				case 0x12: skullCursorX = 5; skullCursorY = 5; break;
-				case 0x13: skullCursorX = 0; skullCursorY = 5; break;
+				case 0x00: spData.skullCursorX = 1; spData.skullCursorY = 0; break;
+				case 0x01: spData.skullCursorX = 2; spData.skullCursorY = 0; break;
+				case 0x02: spData.skullCursorX = 3; spData.skullCursorY = 0; break;
+				case 0x03: spData.skullCursorX = 4; spData.skullCursorY = 0; break;
+				case 0x04: spData.skullCursorX = 5; spData.skullCursorY = 1; break;
+				case 0x05: spData.skullCursorX = 5; spData.skullCursorY = 2; break;
+				case 0x06: spData.skullCursorX = 5; spData.skullCursorY = 3; break;
+				case 0x07: spData.skullCursorX = 5; spData.skullCursorY = 4; break;
+				case 0x08: spData.skullCursorX = 1; spData.skullCursorY = 5; break;
+				case 0x09: spData.skullCursorX = 2; spData.skullCursorY = 5; break;
+				case 0x0a: spData.skullCursorX = 3; spData.skullCursorY = 5; break;
+				case 0x0b: spData.skullCursorX = 4; spData.skullCursorY = 5; break;
+				case 0x0c: spData.skullCursorX = 0; spData.skullCursorY = 1; break;
+				case 0x0d: spData.skullCursorX = 0; spData.skullCursorY = 2; break;
+				case 0x0e: spData.skullCursorX = 0; spData.skullCursorY = 3; break;
+				case 0x0f: spData.skullCursorX = 0; spData.skullCursorY = 4; break;
+				case 0x10: spData.skullCursorX = 0; spData.skullCursorY = 0; break;
+				case 0x11: spData.skullCursorX = 5; spData.skullCursorY = 0; break;
+				case 0x12: spData.skullCursorX = 5; spData.skullCursorY = 5; break;
+				case 0x13: spData.skullCursorX = 0; spData.skullCursorY = 5; break;
 				case 0x14:
-					skullCursorX = ((skullMouseX - 119) / 24) + 1;
-					skullCursorY = ((skullMouseY - 60) / 24) + 1;
+					spData.skullCursorX = ((skullMouseX - 119) / 24) + 1;
+					spData.skullCursorY = ((skullMouseY - 60) / 24) + 1;
 					break;
-				default: skullCursorX = 0; skullCursorY = 0; break;
+				default: spData.skullCursorX = 0; spData.skullCursorY = 0; break;
 				}
 			}
 		}
-		drawSkullPuzzle(skullMouseX, skullMouseY);
+		drawSkullPuzzle(spData, skullMouseX, skullMouseY);
 		if (_vm->isCD()) {
 			_vm->_gMgr->paintBackbuffer_mouse();
 			if (_movementStatus == 0 && (!_vm->_moMgr->getLeftBut()) && (!_vm->_moMgr->getRightBut()) && _lastPressedKey == Common::KEYCODE_INVALID) {
@@ -4456,7 +4537,7 @@ uint16 GameManager::handleSkullPuzzle() {
 			}
 		}
 
-		if (skullPuzzleCheckSolution()) {
+		if (skullPuzzleCheckSolution(spData)) {
 			done = 2;
 		}
 		uint16 operation = Common::KEYCODE_INVALID;
@@ -4475,50 +4556,50 @@ uint16 GameManager::handleSkullPuzzle() {
 		}
 		uint16 moveStatus = _movementStatus;
 		bool movedByKeys = false;
-		if ((moveStatus & kUpFlag) && skullCursorY > 0) {
+		if ((moveStatus & kUpFlag) && spData.skullCursorY > 0) {
 			movedByKeys = true;
-			skullCursorY--;
+			spData.skullCursorY--;
 		}
-		if ((moveStatus & kDownFlag) && skullCursorY < 5) {
+		if ((moveStatus & kDownFlag) && spData.skullCursorY < 5) {
 			movedByKeys = true;
-			skullCursorY++;
+			spData.skullCursorY++;
 		}
-		if ((moveStatus & kLeftFlag) && skullCursorX > 0) {
+		if ((moveStatus & kLeftFlag) && spData.skullCursorX > 0) {
 			movedByKeys = true;
-			skullCursorX--;
+			spData.skullCursorX--;
 		}
-		if ((moveStatus & kRightFlag) && skullCursorX < 5) {
+		if ((moveStatus & kRightFlag) && spData.skullCursorX < 5) {
 			movedByKeys = true;
-			skullCursorX++;
+			spData.skullCursorX++;
 		}
 		if (_vm->isCD() && movedByKeys) {
 			skullMouseTarget = 20;
-			if (skullCursorX == 0 && skullCursorY == 0) {
+			if (spData.skullCursorX == 0 && spData.skullCursorY == 0) {
 				skullMouseTarget = 16;
 			}
-			if (skullCursorX == 5 && skullCursorY == 0) {
+			if (spData.skullCursorX == 5 && spData.skullCursorY == 0) {
 				skullMouseTarget = 17;
 			}
-			if (skullCursorX == 5 && skullCursorY == 5) {
+			if (spData.skullCursorX == 5 && spData.skullCursorY == 5) {
 				skullMouseTarget = 18;
 			}
-			if (skullCursorX == 0 && skullCursorY == 5) {
+			if (spData.skullCursorX == 0 && spData.skullCursorY == 5) {
 				skullMouseTarget = 19;
 			}
-			if (skullCursorX > 0 && skullCursorX < 5 && skullCursorY == 0) {
-				skullMouseTarget = skullCursorX-1;
+			if (spData.skullCursorX > 0 && spData.skullCursorX < 5 && spData.skullCursorY == 0) {
+				skullMouseTarget = spData.skullCursorX-1;
 			}
-			if (skullCursorX > 0 && skullCursorX < 5 && skullCursorY == 5) {
-				skullMouseTarget = skullCursorX + 7;
+			if (spData.skullCursorX > 0 && spData.skullCursorX < 5 && spData.skullCursorY == 5) {
+				skullMouseTarget = spData.skullCursorX + 7;
 			}
-			if (skullCursorY > 0 && skullCursorY < 5 && skullCursorX == 0) {
-				skullMouseTarget = skullCursorY + 11;
+			if (spData.skullCursorY > 0 && spData.skullCursorY < 5 && spData.skullCursorX == 0) {
+				skullMouseTarget = spData.skullCursorY + 11;
 			}
-			if (skullCursorY > 0 && skullCursorY < 5 && skullCursorX == 5) {
-				skullMouseTarget = skullCursorY + 3;
+			if (spData.skullCursorY > 0 && spData.skullCursorY < 5 && spData.skullCursorX == 5) {
+				skullMouseTarget = spData.skullCursorY + 3;
 			}
 			if (skullMouseTarget == 20) {
-				_vm->_moMgr->warpMouse(((skullCursorX - 1) * 24) + 130, ((skullCursorY - 1) * 24) + 71);
+				_vm->_moMgr->warpMouse(((spData.skullCursorX - 1) * 24) + 130, ((spData.skullCursorY - 1) * 24) + 71);
 			}
 			else {
 				MouseManager::mouseTarget mt=_vm->_moMgr->getTarget(MouseManager::Targets::SKULLPUZZLE, skullMouseTarget);
@@ -4529,29 +4610,29 @@ uint16 GameManager::handleSkullPuzzle() {
 			done = 1;
 		}
 		if (_lastPressedKey == Common::KeyCode::KEYCODE_RETURN || _lastPressedKey == Common::KeyCode::KEYCODE_KP_ENTER) {
-			if (skullCursorX == 0 && skullCursorY > 0 && skullCursorY < 5) {
+			if (spData.skullCursorX == 0 && spData.skullCursorY > 0 && spData.skullCursorY < 5) {
 				if (_vm->isCD() && _vm->_gameState.digiVolume != 0) {
 					_vm->_audioMgr->playDigiCurrent(1);
 				}
-				skullPuzzleMoveHorz(skullCursorY, -1);
+				skullPuzzleMoveHorz(spData.skullCursorY, -1, spData);
 			}
-			if (skullCursorX == 5 && skullCursorY > 0 && skullCursorY < 5) {
+			if (spData.skullCursorX == 5 && spData.skullCursorY > 0 && spData.skullCursorY < 5) {
 				if (_vm->isCD() && _vm->_gameState.digiVolume != 0) {
 					_vm->_audioMgr->playDigiCurrent(1);
 				}
-				skullPuzzleMoveHorz(skullCursorY, 1);
+				skullPuzzleMoveHorz(spData.skullCursorY, 1, spData);
 			}
-			if (skullCursorY == 0 && skullCursorX > 0 && skullCursorX < 5) {
+			if (spData.skullCursorY == 0 && spData.skullCursorX > 0 && spData.skullCursorX < 5) {
 				if (_vm->isCD() && _vm->_gameState.digiVolume != 0) {
 					_vm->_audioMgr->playDigiCurrent(1);
 				}
-				skullPuzzleMoveVert(skullCursorX, -1);
+				skullPuzzleMoveVert(spData.skullCursorX, -1, spData);
 			}
-			if (skullCursorY == 5 && skullCursorX > 0 && skullCursorX < 5) {
+			if (spData.skullCursorY == 5 && spData.skullCursorX > 0 && spData.skullCursorX < 5) {
 				if (_vm->isCD() && _vm->_gameState.digiVolume != 0) {
 					_vm->_audioMgr->playDigiCurrent(1);
 				}
-				skullPuzzleMoveVert(skullCursorX, 1);
+				skullPuzzleMoveVert(spData.skullCursorX, 1, spData);
 			}
 			do {
 				updateInputStatus();
@@ -4564,8 +4645,8 @@ uint16 GameManager::handleSkullPuzzle() {
 		waitForNoInput();
 		_vm->_gMgr->paintBackbuffer_mouse();
 	}
-	delete[] skullPuzzleData;
-	skullPuzzleData = nullptr;
+//	delete[] skullPuzzleData;
+//	skullPuzzleData = nullptr;
 	if (_vm->isCD()) {
 		_vm->_moMgr->setMouseVisibility(true);
 	}
@@ -4577,102 +4658,102 @@ uint16 GameManager::handleSkullPuzzle() {
 	}
 	return 0;
 }
-void GameManager::skullPuzzleMoveHorz(uint16 row, int16 dir) {
+void GameManager::skullPuzzleMoveHorz(uint16 row, int16 dir, skullPuzzleData &spData) {
 	if (dir == -1) {
-		skullTilesState[30 + row] = skullTilesState[6 + row];
+		spData.skullTilesState[30 + row] = spData.skullTilesState[6 + row];
 		for (uint8 pix = 0; pix < 24; pix += 2) {
 			for (uint8 rotCol = 1; rotCol < 6; rotCol++) {
 				_vm->_gMgr->setDrawAreaX(120, 215);
-				drawSkullPuzzleTile(rotCol, row, -pix, 0);
+				drawSkullPuzzleTile(rotCol, row, -pix, 0, spData);
 			}
 			_vm->_gMgr->setDrawAreaX(0, 319);
-			_vm->_gMgr->decodeFrame(18, 108 + (skullCursorX * 24), 48 + (skullCursorY * 24), skullPuzzleData);
+			_vm->_gMgr->decodeFrame(18, 108 + (spData.skullCursorX * 24), 48 + (spData.skullCursorY * 24), spData.skullPuzzleData.get());
 			_vm->_gMgr->paintBackbuffer_mouse();
 		}
 		for (uint8 rotCol = 0; rotCol < 5; rotCol++) {
-			skullTilesState[(rotCol * 6) + row] = skullTilesState[((rotCol + 1) * 6) + row];
+			spData.skullTilesState[(rotCol * 6) + row] = spData.skullTilesState[((rotCol + 1) * 6) + row];
 		}
-		skullTilesState[30 + row] = skullTilesState[6 + row];
+		spData.skullTilesState[30 + row] = spData.skullTilesState[6 + row];
 	}
 	if (dir == 1) {
-		skullTilesState[row] = skullTilesState[24 + row];
+		spData.skullTilesState[row] = spData.skullTilesState[24 + row];
 		for (uint8 pix = 0; pix < 24; pix += 2) {
 			for (uint8 rotCol = 0; rotCol < 5; rotCol++) {
 				_vm->_gMgr->setDrawAreaX(120, 215);
-				drawSkullPuzzleTile(rotCol, row, pix, 0);
+				drawSkullPuzzleTile(rotCol, row, pix, 0, spData);
 			}
 			_vm->_gMgr->setDrawAreaX(0, 319);
-			_vm->_gMgr->decodeFrame(18, 108 + (skullCursorX * 24), 48 + (skullCursorY * 24), skullPuzzleData);
+			_vm->_gMgr->decodeFrame(18, 108 + (spData.skullCursorX * 24), 48 + (spData.skullCursorY * 24), spData.skullPuzzleData.get());
 			_vm->_gMgr->paintBackbuffer_mouse();
 		}
 		for (uint8 rotCol = 5; rotCol > 0; rotCol--) {
-			skullTilesState[(rotCol * 6) + row] = skullTilesState[((rotCol - 1) * 6) + row];
+			spData.skullTilesState[(rotCol * 6) + row] = spData.skullTilesState[((rotCol - 1) * 6) + row];
 		}
-		skullTilesState[row] = skullTilesState[24 + row];
+		spData.skullTilesState[row] = spData.skullTilesState[24 + row];
 	}
 }
-void GameManager::skullPuzzleMoveVert(uint16 col, int16 dir) {
+void GameManager::skullPuzzleMoveVert(uint16 col, int16 dir, skullPuzzleData& spData) {
 	if (dir == -1) {
-		skullTilesState[(col * 6) + 5] = skullTilesState[(col * 6) + 1];
+		spData.skullTilesState[(col * 6) + 5] = spData.skullTilesState[(col * 6) + 1];
 		for (uint8 pix = 0; pix < 24; pix += 2) {
 			for (uint8 rotRow = 1; rotRow < 6; rotRow++) {
 				_vm->_gMgr->setDrawAreaY(60, 156);
-				drawSkullPuzzleTile(col, rotRow, 0, -pix);
+				drawSkullPuzzleTile(col, rotRow, 0, -pix, spData);
 			}
 			_vm->_gMgr->setDrawAreaY(0, 320); //Bug??
-			_vm->_gMgr->decodeFrame(18, 108 + (skullCursorX * 24), 48 + (skullCursorY * 24), skullPuzzleData);
+			_vm->_gMgr->decodeFrame(18, 108 + (spData.skullCursorX * 24), 48 + (spData.skullCursorY * 24), spData.skullPuzzleData.get());
 			_vm->_gMgr->paintBackbuffer_mouse();
 		}
 		for (uint8 rotRow = 0; rotRow < 5; rotRow++) {
-			skullTilesState[(col * 6) + rotRow] = skullTilesState[(col * 6) + rotRow + 1];
+			spData.skullTilesState[(col * 6) + rotRow] = spData.skullTilesState[(col * 6) + rotRow + 1];
 		}
-		skullTilesState[(col * 6) + 5] = skullTilesState[(col * 6) + 1];
+		spData.skullTilesState[(col * 6) + 5] = spData.skullTilesState[(col * 6) + 1];
 	}
 	if (dir == 1) {
-		skullTilesState[(col * 6)] = skullTilesState[(col * 6) + 4];
+		spData.skullTilesState[(col * 6)] = spData.skullTilesState[(col * 6) + 4];
 		for (uint8 pix = 0; pix < 24; pix += 2) {
 			for (uint8 rotRow = 0; rotRow < 5; rotRow++) {
 				_vm->_gMgr->setDrawAreaY(60, 156);
-				drawSkullPuzzleTile(col, rotRow, 0, pix);
+				drawSkullPuzzleTile(col, rotRow, 0, pix, spData);
 			}
 			_vm->_gMgr->setDrawAreaY(0, 320); //Bug??
-			_vm->_gMgr->decodeFrame(18, 108 + (skullCursorX * 24), 48 + (skullCursorY * 24), skullPuzzleData);
+			_vm->_gMgr->decodeFrame(18, 108 + (spData.skullCursorX * 24), 48 + (spData.skullCursorY * 24), spData.skullPuzzleData.get());
 			_vm->_gMgr->paintBackbuffer_mouse();
 		}
 		for (uint8 rotRow = 5; rotRow > 0; rotRow--) {
-			skullTilesState[(col * 6) + rotRow] = skullTilesState[(col * 6) + rotRow - 1];
+			spData.skullTilesState[(col * 6) + rotRow] = spData.skullTilesState[(col * 6) + rotRow - 1];
 		}
-		skullTilesState[(col * 6)] = skullTilesState[(col * 6) + 4];
+		spData.skullTilesState[(col * 6)] = spData.skullTilesState[(col * 6) + 4];
 	}
 }
 
-void GameManager::drawSkullPuzzle(int16 mouseX, int16 mouseY) {
+void GameManager::drawSkullPuzzle(const skullPuzzleData& spData, int16 mouseX, int16 mouseY) {
 	_vm->_gMgr->copyVideoBuffer(_vm->_gMgr->getBackground(), _vm->_gMgr->getBackbuffer());
-	_vm->_gMgr->decodeFrame(0x11, 0, 0, skullPuzzleData);
+	_vm->_gMgr->decodeFrame(0x11, 0, 0, spData.skullPuzzleData.get());
 	for (uint16 col = 1; col < 5; col++) {
 		for (uint16 row = 1; row < 5; row++) {
-			drawSkullPuzzleTile(col, row, 0, 0);
+			drawSkullPuzzleTile(col, row, 0, 0, spData);
 		}
 	}
 	if (mouseX == -1 || mouseY == -1) {
-		_vm->_gMgr->decodeFrame(18, 108 + (skullCursorX * 24), 48 + (skullCursorY * 24), skullPuzzleData);
+		_vm->_gMgr->decodeFrame(18, 108 + (spData.skullCursorX * 24), 48 + (spData.skullCursorY * 24), spData.skullPuzzleData.get());
 	}
 	else {
-		_vm->_gMgr->decodeFrame(18,mouseX, mouseY, skullPuzzleData);
+		_vm->_gMgr->decodeFrame(18,mouseX, mouseY, spData.skullPuzzleData.get());
 	}
 }
-void GameManager::drawSkullPuzzleTile(uint16 col, uint16 row, uint16 xoffs, uint16 yoffs) {
+void GameManager::drawSkullPuzzleTile(uint16 col, uint16 row, uint16 xoffs, uint16 yoffs, const skullPuzzleData& spData) {
 	_vm->_gMgr->decodeFrame(
-		skullTilesState[(col * 6) + row],
+		spData.skullTilesState[(col * 6) + row],
 		119 + xoffs + ((col - 1) * 24),
 		60 + yoffs + ((row - 1) * 24),
-		skullPuzzleData);
+		spData.skullPuzzleData.get());
 }
-bool GameManager::skullPuzzleCheckSolution() {
+bool GameManager::skullPuzzleCheckSolution(const skullPuzzleData& spData) {
 	uint8 correctlyPositioned = 0;
 	for (uint8 col = 1; col < 5; col++) {
 		for (uint8 row = 1; row < 5; row++) {
-			if (skullTilesState[(col * 6) + row] == (((row - 1) * 4) + col - 1)) {
+			if (spData.skullTilesState[(col * 6) + row] == (((row - 1) * 4) + col - 1)) {
 				correctlyPositioned++;
 			}
 		}

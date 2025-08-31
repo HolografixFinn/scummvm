@@ -157,6 +157,7 @@ void gameState::serializeHotspot(Hotspot &hotspot, CometXorSerializer &s) {
 void gameState::serializeResource(Resource &resource, CometXorSerializer &s) {
 	uint32 dzero = 0;
 	uint32 _tmp = 0;
+	resource.needsReloading = false;
 	s.syncAsByte(resource.type);
 	s.syncAsByte(resource.fileIdx);
 	/*
@@ -168,7 +169,13 @@ void gameState::serializeResource(Resource &resource, CometXorSerializer &s) {
 	s.syncAsUint32LE(_tmp); 
 	resource.data = reinterpret_cast<char *>(_tmp);
 	*/
-	syncPointer<uint8>(resource.data, s);
+	auto tmpptr = resource.data.get();
+	syncPointer<uint8>(tmpptr, s);
+
+	if (tmpptr != resource.data.get()) {
+		resource.needsReloading = true;
+		resource.data.reset();
+	}
 }
 void gameState::serializeRoomScript(RoomScript &script, CometXorSerializer &s) {
 	uint32 dzero = 0;

@@ -370,8 +370,9 @@ bool ScriptsManager::op_setStageColorsReplace(RoomScript *const script) {
 //26
 bool ScriptsManager::op_fadePalette(RoomScript *const script) {
 	_vm->_gameState.paletteFadeLevel = readByteParameter(script->current);
-	_vm->_gMgr->fadePalette(_vm->_gMgr->mainGamePalette, _vm->_gMgr->tmpPalette, _vm->_gameState.paletteFadeLevel, 256);
-	_vm->_gMgr->uploadPalette(_vm->_gMgr->tmpPalette);
+	_vm->_gMgr->fadePalette(GraphicsManager::PALETTES::MAIN, GraphicsManager::PALETTES::TMP, _vm->_gameState.paletteFadeLevel, 256);
+//	_vm->_gMgr->fadePalette(_vm->_gMgr->mainGamePalette, _vm->_gMgr->tmpPalette, _vm->_gameState.paletteFadeLevel, 256);
+	_vm->_gMgr->uploadPalette(GraphicsManager::PALETTES::TMP);
 	return false;
 }
 //27

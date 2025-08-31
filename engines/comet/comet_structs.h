@@ -24,6 +24,7 @@
 #define COMET_STRUCTS_H
 
 #include "common/scummsys.h"
+#include "common/ptr.h"
 
 namespace Cometengine {
 
@@ -96,7 +97,10 @@ namespace Cometengine {
 	struct Resource {
 		uint8 type;
 		uint8 fileIdx;
-		uint8 *data;
+//		uint8 *data;
+		Common::SharedPtr<uint8> data;
+		//not in the original engine
+		bool needsReloading;
 	}PACKED_STRUCT;
 #include "common/pack-end.h"
 

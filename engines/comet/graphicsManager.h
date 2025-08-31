@@ -25,7 +25,7 @@
 #include "common/mutex.h"
 #include "common/scummsys.h"
 #include "common/system.h"
-
+#include "common/ptr.h"
 #include "comet/comet_structs.h"
 
 #define _COMET_XRESOLUTION 320
@@ -42,24 +42,57 @@ public:
 	void init();
 	void uninit();
 	void waitVRetrace();
-	void initializePalette(uint8 *_mainPalette, uint8 *_flahsbackPalette, uint8 *_cdintroPalette=nullptr, uint8 *_cdPalette2=nullptr);
-	void setBasicResources(uint8 *speechbox, uint8 *mainWalk, uint8 *icons, uint8 *objects);
+	void initializePalette_old(uint8 *_mainPalette, uint8 *_flahsbackPalette, uint8 *_cdintroPalette=nullptr, uint8 *_cdPalette2=nullptr);
+	void setBasicResources_old(uint8 *speechbox, uint8 *mainWalk, uint8 *icons, uint8 *objects);
+	void initializePalette(Common::SharedPtr<uint8> _mainPalette, Common::SharedPtr<uint8> _flahsbackPalette, Common::SharedPtr<uint8> _cdintroPalette = nullptr, Common::SharedPtr<uint8> _cdPalette2 = nullptr);
+	void setBasicResources(Common::SharedPtr<uint8> speechbox, Common::SharedPtr<uint8> mainWalk, Common::SharedPtr<uint8> icons, Common::SharedPtr<uint8> objects);
 	void initGameObjectsAndFlags();
-	uint8 *getResourceData(uint8 type);
+	Common::SharedPtr<uint8> getResourceData(uint8 type);
+//	uint8 *getResourceData(uint8 type);
 	uint32 _rowsOffsets[_COMET_YRESOLUTION];
 	uint8 *lockMainSurface();
 	void unlockMainSurface();
-	uint8 *_stageAnims;
+//	uint8 *_stageAnims;
+	Common::SharedPtr<uint8> _stageAnims{};
 	//palettes
-	void fadePalette(uint8 *palette, uint8 *destPalette, uint8 fadeLevel, uint16 numColors);
-	void uploadPalette(uint8 *palette);
 //	void uploadPalettePartial(char *palette, uint16 startIdx, uint16 count);
-	uint8 *mainGamePalette; // _primaryPaletteData;
-	uint8 *sepiaPalette;     //_secondaryPaletteData;
-	uint8 *normalPalette;
-	uint8 *tmpPalette;
-	uint8 *cdintroPalette;
-	uint8 *cd2Palette;
+
+//	uint8 *mainGamePalette; // _primaryPaletteData;
+//	uint8 *sepiaPalette;     //_secondaryPaletteData;
+//	uint8 *cdintroPalette;
+//	uint8 *cd2Palette;
+
+	uint8 normalPalette[0x300];
+	uint8 tmpPalette[0x300];
+
+	enum class PALETTES {
+		MAIN,
+		SEPIA,
+		CDINTRO,
+		EXTRA,
+
+		NORMAL,
+		TMP,
+
+		CUSTOM
+	};
+	void copyPalette(PALETTES src, PALETTES dst) {
+		auto srcptr = getPalettePtr(src);
+		auto dstPtr = getPalettePtr(dst);
+		memcpy(dstPtr, srcptr, 256 * 3);
+	}
+	void uploadPalette(PALETTES pal, uint8* custom=nullptr) {
+		if (pal == PALETTES::CUSTOM) {
+			uploadPalette(custom);
+		}
+		else {
+			uploadPalette(getPalettePtr(pal));
+		}
+	}
+	void fadePalette(PALETTES palette, PALETTES destPalette, uint8 fadeLevel, uint16 numColors) {
+		fadePalette(getPalettePtr(palette), getPalettePtr(destPalette), fadeLevel, numColors);
+	}
+
 	void setPaletteTint(uint16 tint);
 	void tintPalette(const uint8 *palette, uint8 *destPalette, uint16 factor);
 	void scalePaletteBrightness(uint16 factor);
@@ -156,8 +189,10 @@ public:
 	void handleRandomStars();
 
 	//
-	uint8 *_iconsGraphics;
-
+//	uint8 *_iconsGraphics;
+	uint8* iconsGraphics() {
+		return _iconsScPtr.get();
+	}
 	//TODO this function down here is useful only for debug draw
 	uint32 getFPS() { return _FPS; }
 
@@ -168,7 +203,36 @@ protected:
 	bool _justFadedOut;
 	//		uint16 _isAlternatePaletteActive;
 private:
+	void fadePalette(uint8* palette, uint8* destPalette, uint8 fadeLevel, uint16 numColors);
+	void uploadPalette(uint8* palette);
+	uint8* getPalettePtr(PALETTES pal) {
+		uint8* val = nullptr;
+		switch (pal) {
+		case PALETTES::MAIN: val = _mainPaletteScPtr.get(); break;
+		case PALETTES::SEPIA: val = _sepiaPaletteScPtr.get(); break;
+		case PALETTES::NORMAL: val = normalPalette; break;
+		case PALETTES::TMP: val = tmpPalette; break;
+		case PALETTES::CDINTRO: val = _cdIntroPaletteScPtr.get(); break;
+		case PALETTES::EXTRA: val = _extraPaletteScPtr.get(); break;
+		default:val = nullptr; break;
+		}
+		return val;
+	}
 
+	//	Common::SharedPtr<uint8> _monolithicResScPtr{};
+
+		Common::SharedPtr<uint8> _fontScPtr{};
+		Common::SharedPtr<uint8> _speechBoxScPtr{};
+		Common::SharedPtr<uint8> _mainWalkScPtr{};
+		Common::SharedPtr<uint8> _iconsScPtr{};
+		Common::SharedPtr<uint8> _objectsScPtr{};
+
+		Common::SharedPtr<uint8> _cursorsScPtr{};
+
+		Common::SharedPtr<uint8> _mainPaletteScPtr{};
+		Common::SharedPtr<uint8> _sepiaPaletteScPtr{};
+		Common::SharedPtr<uint8> _cdIntroPaletteScPtr{};
+		Common::SharedPtr<uint8> _extraPaletteScPtr{};
 
 	bool invretrace{false};
 
@@ -225,8 +289,10 @@ private:
 
 	//resources
 	uint8 *_speechBoxGraphics;
-	uint8 *_parkerWalkAnimation;
-	uint8 *_type3Resource_unused;
+	Common::SharedPtr<uint8> _parkerWalkAnimation;
+//	uint8 *_parkerWalkAnimation;
+	Common::SharedPtr<uint8> _type3Resource_unused{};
+//	uint8 *_type3Resource_unused;
 	uint8 *_objectsGraphics;
 	void scalePalette(char *palette);
 	void setPaletteEntries(const uint8 *palette, uint8 startEntry, uint16 numEntries);
