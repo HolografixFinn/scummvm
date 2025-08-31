@@ -16,7 +16,7 @@ struct gameState {
 	void serializeStageElement(StageElement &elem, CometXorSerializer &s);
 	void syncBool(bool &v, CometXorSerializer &s);
 	template<typename T>
-	void syncPointer(T*& ptr, CometXorSerializer& s, uint32 dummyval=1) {
+	void syncPointer(T* &ptr, CometXorSerializer& s, uint32 dummyval=1) {
 		// I know I can't store pointers this way, but I only need to store if the ptr was null or not (or just the difference between two pointers). If it's not null, it will be reloaded with correct data
 		uint32 _tmp = dummyval;
 		if (ptr == nullptr) {

@@ -71,9 +71,12 @@ GraphicsManager::GraphicsManager(CometEngine *vm) : _vm(vm), _currFPS(0), _FPS(0
 													_videoBackbuffer(nullptr), _videoBackbufferSize(0),
 													_prePaintMouseCallback(nullptr), _postPaintMouseCallback(nullptr),
 													_speechBoxGraphics(nullptr), _parkerWalkAnimation(nullptr), _stageAnims(nullptr),
-													_type3Resource_unused(nullptr), _iconsGraphics(nullptr), _objectsGraphics(nullptr),
-													mainGamePalette(nullptr), sepiaPalette(nullptr), cdintroPalette(nullptr), cd2Palette(nullptr),
-													normalPalette(nullptr), tmpPalette(nullptr), //_displayList(), //_numElementsInDisplayList(0),
+													_type3Resource_unused(nullptr),
+	//_iconsGraphics(nullptr),
+	_objectsGraphics(nullptr),
+													//mainGamePalette(nullptr),
+//	sepiaPalette(nullptr), cdintroPalette(nullptr), cd2Palette(nullptr),
+//													normalPalette(nullptr), tmpPalette(nullptr), //_displayList(), //_numElementsInDisplayList(0),
 													_tmpBuffer(nullptr), _coordinates(),
 													_decodingFlags_v1(0), _decodingFlags_v2(0), _isByteParams_v1(false), _isByteParams_v2(false), _isNegParam1_v1(false), _isNegParam2_v1(false), _isNegParam1_v2(false), _isNegParam2_v2(false),
 													_tmpCoords1(), _tmpCoords2(), _tmpCoords(), _polygonXBuffer(), _polygonXBuffer1(), _polygonXBuffer2(), _currPixelColor(0), _rowBuffer(), _isPaintWithEffect(false), _fadeStatus(0), _fadeSpeedStep(0),
@@ -153,18 +156,18 @@ void GraphicsManager::uninit() {
 	_vm->_system->getTimerManager()->removeTimerProc(GraphicsManager::onFrameTimer);
 	delete[] this->_videoBackbuffer;
 	delete[] this->_backgroundBuffer;
-	delete[] this->normalPalette;
-	delete[] this->tmpPalette;
+//	delete[] this->normalPalette;
+//	delete[] this->tmpPalette;
 	if (_vm->isCD()) {
 
-		delete[] this->mainGamePalette;
-		delete[] this->sepiaPalette;
-		delete[] this->cdintroPalette;
-		delete[] this->cd2Palette;
-		delete[] this->_speechBoxGraphics;
-		delete[] this->_parkerWalkAnimation;
-		delete[] this->_iconsGraphics;
-		delete[] this->_objectsGraphics;
+//		delete[] this->mainGamePalette;
+//		delete[] this->sepiaPalette;
+//		delete[] this->cdintroPalette;
+//		delete[] this->cd2Palette;
+//		delete[] this->_speechBoxGraphics;
+//		delete[] this->_parkerWalkAnimation;
+//		delete[] this->_iconsGraphics;
+//		delete[] this->_objectsGraphics;
 	}
 }
 void GraphicsManager::onFrameTimer(void *ref) {
@@ -268,21 +271,54 @@ void GraphicsManager::paintBackbuffer() {
 	//TEST
 	this->_currFPS++;
 }
-void GraphicsManager::initializePalette(uint8 *_mainPalette, uint8 *_flahsbackPalette, uint8 *_cdintroPalette, uint8 *_cdPalette2) {
-	mainGamePalette = _mainPalette;
-	sepiaPalette = _flahsbackPalette;
-	cdintroPalette = _cdintroPalette;
-	cd2Palette = _cdPalette2;
-	normalPalette = new uint8[0x300];
-	tmpPalette = new uint8[0x300]; //TODO it isn't there?
-	memcpy(normalPalette, mainGamePalette, 0x300);
-	memcpy(tmpPalette, mainGamePalette, 0x300); // TODO it isn't there?
-	uploadPalette(mainGamePalette);
+void GraphicsManager::initializePalette(Common::SharedPtr<uint8> _mainPalette, Common::SharedPtr<uint8> _flahsbackPalette, Common::SharedPtr<uint8> _cdintroPalette, Common::SharedPtr<uint8> _cdPalette2) {
+
+	_mainPaletteScPtr = _mainPalette;
+	_sepiaPaletteScPtr = _flahsbackPalette;
+	_cdIntroPaletteScPtr = _cdintroPalette;
+	_extraPaletteScPtr = _cdPalette2;
+	//mainGamePalette = _mainPaletteScPtr.get();
+//	sepiaPalette = _sepiaPaletteScPtr.get();
+//	cdintroPalette = _cdIntroPaletteScPtr.get();
+//	cd2Palette = _extraPaletteScPtr.get();
+
+//	normalPalette = new uint8[0x300];
+//	tmpPalette = new uint8[0x300]; //TODO it isn't there?
+	memcpy(normalPalette, _mainPaletteScPtr.get(), 0x300);
+//	memcpy(normalPalette, mainGamePalette, 0x300);
+	memcpy(tmpPalette, _mainPaletteScPtr.get(), 0x300); // TODO it isn't there?
+//	memcpy(tmpPalette, mainGamePalette, 0x300); // TODO it isn't there?
+	uploadPalette(_mainPaletteScPtr.get());
 }
-void GraphicsManager::setBasicResources(uint8 *speechbox, uint8 *mainWalk, uint8 *icons, uint8 *objects) {
+void GraphicsManager::setBasicResources(Common::SharedPtr<uint8> speechbox, Common::SharedPtr<uint8> mainWalk, Common::SharedPtr<uint8> icons, Common::SharedPtr<uint8> objects) {
+	_speechBoxScPtr = speechbox;
+	_mainWalkScPtr = mainWalk;
+	_iconsScPtr = icons;
+	_objectsScPtr = objects;
+
+	_speechBoxGraphics = _speechBoxScPtr.get();
+	_parkerWalkAnimation = _mainWalkScPtr;
+//	_iconsGraphics = _iconsScPtr.get();
+	_objectsGraphics = _objectsScPtr.get();
+}
+void GraphicsManager::initializePalette_old(uint8 *_mainPalette, uint8 *_flahsbackPalette, uint8 *_cdintroPalette, uint8 *_cdPalette2) {
+//	mainGamePalette = _mainPalette;
+//	sepiaPalette = _flahsbackPalette;
+//	cdintroPalette = _cdintroPalette;
+//	cd2Palette = _cdPalette2;
+//	normalPalette = new uint8[0x300];
+//	tmpPalette = new uint8[0x300]; //TODO it isn't there?
+	memcpy(normalPalette, _mainPaletteScPtr.get(), 0x300);
+//	memcpy(normalPalette, mainGamePalette, 0x300);
+	memcpy(tmpPalette, _mainPaletteScPtr.get(), 0x300); // TODO it isn't there?
+//	memcpy(tmpPalette, mainGamePalette, 0x300); // TODO it isn't there?
+	uploadPalette(_mainPaletteScPtr.get());
+//	uploadPalette(mainGamePalette);
+}
+void GraphicsManager::setBasicResources_old(uint8 *speechbox, uint8 *mainWalk, uint8 *icons, uint8 *objects) {
 	_speechBoxGraphics = speechbox;
-	_parkerWalkAnimation = mainWalk;
-	_iconsGraphics = icons;
+//	_parkerWalkAnimation = mainWalk;
+//	_iconsGraphics = icons;
 	_objectsGraphics = objects;
 }
 
@@ -313,7 +349,8 @@ void GraphicsManager::scalePalette(char *palette) {
 }
 void GraphicsManager::scalePaletteBrightness(uint16 factor) {
 	for (uint16 i = 0; i < 0x300; i++) {
-		uint8 v = mainGamePalette[i];
+		uint8 v = _mainPaletteScPtr.get()[i];
+//		uint8 v = mainGamePalette[i];
 		uint16 v2 = 0x100 - v;
 		v2 = v2 / 16 * factor;
 		tmpPalette[i] = v2 + v;
@@ -340,20 +377,24 @@ void GraphicsManager::initGameObjectsAndFlags() {
 		_vm->_gameState.gameVars[i] = 0;
 	}
 }
-uint8 *GraphicsManager::getResourceData(uint8 type) {
-	uint8 *ptr = nullptr;
+Common::SharedPtr<uint8> GraphicsManager::getResourceData(uint8 type) {
+//	uint8 *ptr = nullptr;
 	switch (type) {
 	case 1:
-		ptr = _parkerWalkAnimation;
+		return _parkerWalkAnimation;
+//		ptr = _parkerWalkAnimation;
 		break;
 	case 2:
-		ptr = _stageAnims;
+		return _stageAnims;
+//		ptr = _stageAnims;
 		break;
 	case 3:
-		ptr = _type3Resource_unused;
+		return _type3Resource_unused;
+//		ptr = _type3Resource_unused;
 		break;
 	}
-	return ptr;
+	return nullptr;
+//	return ptr;
 }
 void GraphicsManager::fadePalette(uint8 *palette, uint8 *destPalette, uint8 fadeLevel, uint16 numColors) {
 	for (uint16 i = 0; i < numColors; i++) {
@@ -387,7 +428,7 @@ uint8 *GraphicsManager::getGraphicsData(uint8 type, uint8 animationIdx, uint8 *r
 }
 
 void GraphicsManager::addStageElementsToDisplayList() {
-	uint8 *elementsData = getGraphicsData(0, 0, _stageAnims);
+	uint8 *elementsData = getGraphicsData(0, 0, _stageAnims.get());
 	uint16 num = *(elementsData + 1);
 	elementsData += 8;
 	for (uint16 i = 0; i < num; i++) {
@@ -424,8 +465,8 @@ void GraphicsManager::insertInDisplayListSorted(uint8 yPos, uint16 idx) {
 void GraphicsManager::drawActorsAndStageElements() {
 	resetDrawArea();
 	uint16 numElements = _vm->_gameState.numElementsInDisplayList;
-	uint8 *stageElements = getGraphicsData(0, 0, _stageAnims);
-	uint8 *frames = getTypeData(1, _stageAnims);
+	uint8 *stageElements = getGraphicsData(0, 0, _stageAnims.get());
+	uint8 *frames = getTypeData(1, _stageAnims.get());
 	stageElements += 2;
 	for (uint16 i = 0; i < numElements; i++) {
 		char actorData = _vm->_gameState.displayList[i].idx;
@@ -446,7 +487,7 @@ void GraphicsManager::drawActorsAndStageElements() {
 			if (type == 1) {
 				decodeFrameType1(idxAndFlags, x, y, _videoBackbuffer, frames);
 			} else {
-				decodeFrame(idxAndFlags, x, y, _stageAnims);
+				decodeFrame(idxAndFlags, x, y, _stageAnims.get());
 			}
 		}
 	}
@@ -481,7 +522,7 @@ void GraphicsManager::drawActorAnimationFrame(uint8 actorIdx) {
 	uint16 y = actor->pivotY;
 	uint16 halfWidth = actor->halfWidth;
 	uint16 height = actor->height;
-	uint8 *resource = _vm->_gameState.resources[actor->resourceIdx].data;
+	uint8 *resource = _vm->_gameState.resources[actor->resourceIdx].data.get();
 	uint8 *animation = getAnimData(actor->animationIdx, resource) + 2;
 	setDrawArea(actor->drawAreaMinX, actor->drawAreaMinY, actor->drawAreaMaxX, actor->drawAreaMaxY);
 	if (actor->animationType == 2) {
@@ -3006,18 +3047,21 @@ void GraphicsManager::setFadeSpeed(uint8 speed) {
 }
 
 void GraphicsManager::dealFadeIn() {
-	fadePalette(mainGamePalette, tmpPalette, 0, 256);
+	fadePalette(_mainPaletteScPtr.get(), tmpPalette, 0, 256);
+//	fadePalette(mainGamePalette, tmpPalette, 0, 256);
 	uploadPalette(tmpPalette);
 	this->_vm->_system->copyRectToScreen(this->_videoBackbuffer, _COMET_XRESOLUTION, 0, 0, _COMET_XRESOLUTION, _COMET_YRESOLUTION);
 	//	this->_vm->_system->updateScreen();
 	this->_hfCappedUpdate();
 	for (uint16 i = 0; i < 256; i += _fadeSpeedStep * 2) {
-		fadePalette(mainGamePalette, tmpPalette, i, 256);
+		fadePalette(_mainPaletteScPtr.get(), tmpPalette, i, 256);
+//		fadePalette(mainGamePalette, tmpPalette, i, 256);
 		uploadPalette(tmpPalette);
 		//		this->_vm->_system->updateScreen();
 		//		this->_hfCappedUpdate();
 	}
-	fadePalette(mainGamePalette, tmpPalette, 255, 256);
+	fadePalette(_mainPaletteScPtr.get(), tmpPalette, 255, 256);
+//	fadePalette(mainGamePalette, tmpPalette, 255, 256);
 	uploadPalette(tmpPalette);
 	//	this->_vm->_system->updateScreen();
 	//	this->_hfCappedUpdate();
@@ -3026,12 +3070,14 @@ void GraphicsManager::dealFadeIn() {
 }
 void GraphicsManager::dealFadeOut() {
 	for (int16 i = 255; i > 0; i -= _fadeSpeedStep * 2) {
-		fadePalette(mainGamePalette, tmpPalette, i, 256);
+		fadePalette(_mainPaletteScPtr.get(), tmpPalette, i, 256);
+//		fadePalette(mainGamePalette, tmpPalette, i, 256);
 		uploadPalette(tmpPalette);
 		//		this->_vm->_system->updateScreen();
 		//		this->_hfCappedUpdate();
 	}
-	fadePalette(mainGamePalette, tmpPalette, 0, 256);
+	fadePalette(_mainPaletteScPtr.get(), tmpPalette, 0, 256);
+//	fadePalette(mainGamePalette, tmpPalette, 0, 256);
 	uploadPalette(tmpPalette);
 	//	this->_vm->_system->updateScreen();
 	//	this->_hfCappedUpdate();
@@ -3040,7 +3086,8 @@ void GraphicsManager::dealFadeOut() {
 }
 void GraphicsManager::setPaletteTint(uint16 tint) {
 	_vm->_gameState.paletteRedTintFactor = tint;
-	tintPalette(mainGamePalette, tmpPalette, tint);
+	tintPalette(_mainPaletteScPtr.get(), tmpPalette, tint);
+//	tintPalette(mainGamePalette, tmpPalette, tint);
 	uploadPalette(tmpPalette);
 }
 void GraphicsManager::tintPalette(const uint8 *palette, uint8 *destPalette, uint16 factor) {
@@ -3138,34 +3185,47 @@ void GraphicsManager::drawFrameToScreen() {
 	}
 	if (_vm->isCD()) {
 		if (_vm->_gameState.currPakNum == 9 && _vm->_gameState.currRoomNum == 0 && _vm->_gameState.isAlternatePaletteActive == 0) {
-			memcpy(normalPalette, mainGamePalette, 768);
-			memcpy(mainGamePalette, cd2Palette, 768);
-			memcpy(tmpPalette, cd2Palette, 768);
+			copyPalette(PALETTES::MAIN, PALETTES::NORMAL);
+//			memcpy(normalPalette, mainGamePalette, 768);
+			copyPalette(PALETTES::EXTRA, PALETTES::MAIN);
+//			memcpy(mainGamePalette, cd2Palette, 768);
+			copyPalette(PALETTES::EXTRA, PALETTES::TMP);
+//			memcpy(tmpPalette, cd2Palette, 768);
 			clearBackbuffer();
 			paintBackbuffer_mouse();
-			uploadPalette(mainGamePalette);
+			uploadPalette(PALETTES::MAIN);
+//			uploadPalette(mainGamePalette);
 			_vm->_gameState.isAlternatePaletteActive = 3;
 		}
 		if (_vm->_gameState.currPakNum == 9 && _vm->_gameState.currRoomNum == 1 && _vm->_gameState.isAlternatePaletteActive == 3) {
-			memcpy(mainGamePalette, cdintroPalette, 768);
-			memcpy(tmpPalette, cdintroPalette, 768);
+			copyPalette(PALETTES::CDINTRO, PALETTES::MAIN);
+//			memcpy(mainGamePalette, cdintroPalette, 768);
+			copyPalette(PALETTES::CDINTRO, PALETTES::TMP);
+//			memcpy(tmpPalette, cdintroPalette, 768);
 			clearBackbuffer();
 			paintBackbuffer_mouse();
-			uploadPalette(mainGamePalette);
+			uploadPalette(PALETTES::MAIN);
+//			uploadPalette(mainGamePalette);
 			_vm->_gameState.isAlternatePaletteActive = 2;
 		}
 		if (_vm->_gameState.currPakNum == 5 && _vm->_gameState.currRoomNum == 0 && (_vm->_gameState.isAlternatePaletteActive == 3 || _vm->_gameState.isAlternatePaletteActive == 2)) {
-			memcpy(mainGamePalette, normalPalette, 768);
-			memcpy(tmpPalette, normalPalette, 768);
+			copyPalette(PALETTES::NORMAL, PALETTES::MAIN);
+//			memcpy(mainGamePalette, normalPalette, 768);
+			copyPalette(PALETTES::NORMAL, PALETTES::TMP);
+//			memcpy(tmpPalette, normalPalette, 768);
 			clearBackbuffer();
 			paintBackbuffer_mouse();
-			uploadPalette(mainGamePalette);
+			uploadPalette(PALETTES::MAIN);
+//			uploadPalette(mainGamePalette);
 			_vm->_gameState.isAlternatePaletteActive = 0;
 		}
 		if (_vm->_gameState.currPakNum == 0 && _vm->_gameState.currRoomNum == 0 && _vm->_gameState.isAlternatePaletteActive != 0) {
-			memcpy(mainGamePalette, normalPalette, 768);
-			memcpy(tmpPalette, normalPalette, 768);
-			uploadPalette(mainGamePalette);
+			copyPalette(PALETTES::NORMAL, PALETTES::MAIN);
+//			memcpy(mainGamePalette, normalPalette, 768);
+			copyPalette(PALETTES::NORMAL, PALETTES::MAIN);
+//			memcpy(tmpPalette, normalPalette, 768);
+			uploadPalette(PALETTES::MAIN);
+//			uploadPalette(mainGamePalette);
 			_vm->_gameState.isAlternatePaletteActive = 0;
 		}
 	}
@@ -3379,18 +3439,19 @@ void GraphicsManager::loadStage(bool isLoading) {
 }
 void GraphicsManager::loadStageAnims() {
 	if (_stageAnims != nullptr) {
-		delete[] _stageAnims;
+//		delete[] _stageAnims;
+		_stageAnims.reset();
 	}
 	_stageAnims = _vm->_archMgr->allocateAndGetFile(_vm->_gmMgr->getStagesFilename(), _vm->_gameState.stageIndex + 1);
 }
 void GraphicsManager::prepareStageElements() {
-	uint8 *data = getGraphicsData(0, 0, _stageAnims);
+	uint8 *data = getGraphicsData(0, 0, _stageAnims.get());
 	if (*(data + 1) != 0) {
-		decodeFrame(0, 0, 0, _stageAnims);
+		decodeFrame(0, 0, 0, _stageAnims.get());
 	}
 }
 void GraphicsManager::loadStageElements() {
-	uint8 *data = getGraphicsData(0, 0, _stageAnims);
+	uint8 *data = getGraphicsData(0, 0, _stageAnims.get());
 	uint16 nElements = *(data + 1);
 	uint16 num = nElements;
 	StageElement *stg = &_vm->_gameState.stageElements[0];
@@ -3403,7 +3464,7 @@ void GraphicsManager::loadStageElements() {
 		uint16 elemPivotX = READ_LE_UINT16(data) / 2;
 		data += 2;
 		uint16 elemPivotY = READ_LE_UINT16(data);
-		uint8 *elem = getGraphicsData(type, elemIdx, _stageAnims) - 2;
+		uint8 *elem = getGraphicsData(type, elemIdx, _stageAnims.get()) - 2;
 		uint8 elemHalfWidth = (*elem) / 2;
 		elem++;
 		if (elemHalfWidth == 0) {
@@ -3484,8 +3545,8 @@ void GraphicsManager::drawDiskMenu(uint8 selectedItem) {
 	uint16 x = 0x89;
 	uint16 yOffs = 0x41;
 	uint16 height = 0x17;
-	decodeFrame(10, 0, 0, _iconsGraphics);
-	decodeFrame(11, x, yOffs + (selectedItem * height), _iconsGraphics);
+	decodeFrame(10, 0, 0, iconsGraphics());
+	decodeFrame(11, x, yOffs + (selectedItem * height), iconsGraphics());
 }
 
 //for encapsulation
@@ -3536,8 +3597,8 @@ void GraphicsManager::addStageElement(uint8 x1, uint8 y1, uint8 x2, uint8 y2) {
 void GraphicsManager::drawIconFrame(uint8 selected, uint8 idx) {
 	uint16 x = 196;
 	uint16 y = 14;
-	decodeFrame(0, 0, 0, _iconsGraphics);
-	decodeFrame(selected + 1, 0, 0, _iconsGraphics);
+	decodeFrame(0, 0, 0, iconsGraphics());
+	decodeFrame(selected + 1, 0, 0, iconsGraphics());
 	if (_vm->_gameState.objectsFlags[_vm->_gameState.activeObject] < 1) {
 		_vm->_gameState.activeObject = -1;
 	}
@@ -3578,12 +3639,12 @@ void GraphicsManager::drawObjectsWindow(uint8 objectsCount, uint16 *objBuffer, u
 	uint16 x = 0;
 	uint16 y = 0;
 	uint16 objIdx = 0;
-	decodeFrame(16, 0, 0, _iconsGraphics);
+	decodeFrame(16, 0, 0, iconsGraphics());
 	if (firstVisibleIdx > 0) {
-		decodeFrame(0x34, 0, 0, _iconsGraphics);
+		decodeFrame(0x34, 0, 0, iconsGraphics());
 	}
 	if (firstVisibleIdx + numItemsPerPage < objectsCount) {
-		decodeFrame(0x35, 0, 0, _iconsGraphics);
+		decodeFrame(0x35, 0, 0, iconsGraphics());
 	}
 	for (uint16 i = 0; i < numItemsPerPage && i + firstVisibleIdx < objectsCount; i++) {
 		const char *objectName = _vm->_txtMgr->getSentencePtr(objBuffer[((i + firstVisibleIdx) * 2) + 1], _vm->_txtMgr->getObjNames());
@@ -3617,9 +3678,9 @@ void GraphicsManager::drawSaveMenu(uint8 selectedItem, bool isLoad, char descs[1
 	uint16 yOffs = 64;
 	uint16 height = 12;
 	if (!isLoad) {
-		decodeFrame(14, 0, 0, _iconsGraphics);
+		decodeFrame(14, 0, 0, iconsGraphics());
 	} else {
-		decodeFrame(15, 0, 0, _iconsGraphics);
+		decodeFrame(15, 0, 0, iconsGraphics());
 	}
 	for (uint8 i = 0; i < 10; i++) {
 		_vm->_gmMgr->updateFontDataAndColor(0x78);
@@ -3637,77 +3698,77 @@ void GraphicsManager::drawSettingsMenu(uint16 currSelection, uint16 volume, uint
 	uint16 scroll_baseX = 128;
 	uint16 scroll_baseY = 70;
 	char diskName[2] = "A";
-	decodeFrame(0x19, 0, 0, _iconsGraphics);
+	decodeFrame(0x19, 0, 0, iconsGraphics());
 	if (_vm->isCD() && (currSelection == 5 || currSelection == 6)) {
 		MouseManager::mouseTarget mt = _vm->_moMgr->getTarget(MouseManager::Targets::OPTIONSMENU, 6);
 		drawRectangleOutline(mt.left, mt.top, mt.right, mt.bottom, 0x77);
 	}
 	else {
-		decodeFrame(0x1c, baseX, baseY + (currSelection * rowHeight), _iconsGraphics);
+		decodeFrame(0x1c, baseX, baseY + (currSelection * rowHeight), iconsGraphics());
 	}
-	decodeFrame(0x1b, scroll_baseX + (volume * 4), scroll_baseY, _iconsGraphics);
-	decodeFrame(0x1b, scroll_baseX + (digiVolume * 4), scroll_baseY + rowHeight, _iconsGraphics);
+	decodeFrame(0x1b, scroll_baseX + (volume * 4), scroll_baseY, iconsGraphics());
+	decodeFrame(0x1b, scroll_baseX + (digiVolume * 4), scroll_baseY + rowHeight, iconsGraphics());
 	if (!_vm->isCD()) {
-		decodeFrame(0x1b, scroll_baseX + (textSpeed * 30), scroll_baseY + (rowHeight * 2), _iconsGraphics);
+		decodeFrame(0x1b, scroll_baseX + (textSpeed * 30), scroll_baseY + (rowHeight * 2), iconsGraphics());
 	}
-	decodeFrame(0x1b, scroll_baseX + (gameSpeed * 4), scroll_baseY + (rowHeight * 3), _iconsGraphics);
+	decodeFrame(0x1b, scroll_baseX + (gameSpeed * 4), scroll_baseY + (rowHeight * 3), iconsGraphics());
 	if (!_vm->isCD()) {
 		diskName[0] = 0x41 + diskNum;
 		_vm->_gmMgr->updateFontDataAndColor(0x78);
 		_vm->_txtMgr->drawString(133, 149, _videoBackbuffer, diskName);
 		_vm->_gmMgr->updateFontDataAndColor(0x77);
 		_vm->_txtMgr->drawString(132, 148, _videoBackbuffer, diskName);
-		decodeFrame(0x20 + langId, 129, 177, _iconsGraphics);
+		decodeFrame(0x20 + langId, 129, 177, iconsGraphics());
 	}
 	else {
-		decodeFrame(0x20 + langId, 129, 157, _iconsGraphics);
+		decodeFrame(0x20 + langId, 129, 157, iconsGraphics());
 	}
 	if (volume == 0) {
-		decodeFrame(0x37, 0, 0, _iconsGraphics);
+		decodeFrame(0x37, 0, 0, iconsGraphics());
 	}
 	if (volume > 0 && volume < 8) {
 		if (framesCounter < 0x10) {
-			decodeFrame(0x47, 0, 0, _iconsGraphics);
+			decodeFrame(0x47, 0, 0, iconsGraphics());
 		} else {
-			decodeFrame(0x48, 0, 0, _iconsGraphics);
+			decodeFrame(0x48, 0, 0, iconsGraphics());
 		}
 	}
 	if (volume >= 8) {
 		if (framesCounter < 0x10) {
-			decodeFrame(0x49, 0, 0, _iconsGraphics);
+			decodeFrame(0x49, 0, 0, iconsGraphics());
 		} else {
-			decodeFrame(0x4a, 0, 0, _iconsGraphics);
+			decodeFrame(0x4a, 0, 0, iconsGraphics());
 		}
 	}
 	if (digiVolume == 0) {
-		drawSingleAnimFrame(1, 0, 0, framesCounter, _iconsGraphics);
+		drawSingleAnimFrame(1, 0, 0, framesCounter, iconsGraphics());
 	} else if (digiVolume < 7) {
-		drawSingleAnimFrame(2, 0, 0, framesCounter, _iconsGraphics);
+		drawSingleAnimFrame(2, 0, 0, framesCounter, iconsGraphics());
 	} else {
-		drawSingleAnimFrame(3, 0, 0, framesCounter, _iconsGraphics);
+		drawSingleAnimFrame(3, 0, 0, framesCounter, iconsGraphics());
 	}
 	if (_vm->isCD()) {
-		decodeFrame(0x4f+_vm->_gameState.speechOptions, 0, 0, _iconsGraphics);
+		decodeFrame(0x4f+_vm->_gameState.speechOptions, 0, 0, iconsGraphics());
 	}
 	else {
 		if (textSpeed == 0 and framesCounter > 6) {
-			decodeFrame(0x46, 0, 0, _iconsGraphics);
+			decodeFrame(0x46, 0, 0, iconsGraphics());
 		}
 		if (textSpeed == 1 and framesCounter > 16) {
-			decodeFrame(0x46, 0, 0, _iconsGraphics);
+			decodeFrame(0x46, 0, 0, iconsGraphics());
 		}
 		if (textSpeed == 2 and framesCounter > 24) {
-			decodeFrame(0x46, 0, 0, _iconsGraphics);
+			decodeFrame(0x46, 0, 0, iconsGraphics());
 		}
 	}
 	if (gameSpeed < 5) {
-		decodeFrame(0x4b, 0, 0, _iconsGraphics);
+		decodeFrame(0x4b, 0, 0, iconsGraphics());
 	}
 	if (gameSpeed >= 5 && gameSpeed < 10) {
-		decodeFrame(0x4c, 0, 0, _iconsGraphics);
+		decodeFrame(0x4c, 0, 0, iconsGraphics());
 	}
 	if (gameSpeed >= 10) {
-		decodeFrame(0x4d, 0, 0, _iconsGraphics);
+		decodeFrame(0x4d, 0, 0, iconsGraphics());
 	}
 }
 void GraphicsManager::drawDiaryPagesAnimation(bool forward) {
@@ -3715,8 +3776,8 @@ void GraphicsManager::drawDiaryPagesAnimation(bool forward) {
 	_vm->_audioMgr->playDigiSubfile(10, 1);
 	if (forward) {
 		for (uint8 i = 0x26; i < 0x31; i++) {
-			decodeFrame(30, 0, 0, _iconsGraphics);
-			decodeFrame(i, 0, 0, _iconsGraphics);
+			decodeFrame(30, 0, 0, iconsGraphics());
+			decodeFrame(i, 0, 0, iconsGraphics());
 			paintBackbuffer_mouse();
 			// here the game uses a small delay loop, which is quite useless on modern machines
 			for (uint8 j = 0; j < 50; j++) {
@@ -3724,8 +3785,8 @@ void GraphicsManager::drawDiaryPagesAnimation(bool forward) {
 		}
 	} else {
 		for (uint8 i = 0x31; i > 0x26; i--) {
-			decodeFrame(30, 0, 0, _iconsGraphics);
-			decodeFrame(i, 0, 0, _iconsGraphics);
+			decodeFrame(30, 0, 0, iconsGraphics());
+			decodeFrame(i, 0, 0, iconsGraphics());
 			paintBackbuffer_mouse();
 			// here the game uses a small delay loop, which is quite useless on modern machines
 			for (uint8 j = 0; j < 50; j++) {
@@ -3744,9 +3805,9 @@ void GraphicsManager::drawDiarySentences(int16 currPage, int16 maxPage, int16 fo
 	memset(pageFooter, 0, 10);
 	_vm->_txtMgr->getSentence(2, currPage, stringBuffer);
 	stringPtr = stringBuffer + 1;
-	decodeFrame(30, 0, 0, _iconsGraphics);
+	decodeFrame(30, 0, 0, iconsGraphics());
 	if (currPage < maxPage) {
-		decodeFrame(37, 0, 0, _iconsGraphics);
+		decodeFrame(37, 0, 0, iconsGraphics());
 	}
 	_vm->_gmMgr->updateFontDataAndColor(0x3a);
 	Common::strlcat(pageFooter, "- ", 10);
@@ -3963,7 +4024,8 @@ void GraphicsManager::replaceStageColors() {
 void GraphicsManager::fadePaletteBlock(uint16 blockIdx, uint16 fadeLevel) {
 	uint16 paletteStartIdx = blockIdx * 16;
 	uint16 paletteOffset = paletteStartIdx * 3;
-	fadePalette(mainGamePalette + paletteOffset, tmpPalette + paletteOffset, fadeLevel, 16);
+	fadePalette(_mainPaletteScPtr.get() + paletteOffset, tmpPalette + paletteOffset, fadeLevel, 16);
+//	fadePalette(mainGamePalette + paletteOffset, tmpPalette + paletteOffset, fadeLevel, 16);
 	waitVRetrace();
 	setPaletteEntries(tmpPalette + paletteOffset, paletteStartIdx, 16);
 }

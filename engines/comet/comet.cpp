@@ -251,16 +251,26 @@ Common::Error CometEngine::run() {
 			break;
 		}
 		if (_gameState.currPakNum == 7 && _gameState.currRoomNum == 1 && _gameState.isAlternatePaletteActive == 0) {
+			/*
 			memcpy(_gMgr->normalPalette, _gMgr->mainGamePalette, 256 * 3);
 			memcpy(_gMgr->mainGamePalette, _gMgr->sepiaPalette, 256 * 3);
 			memcpy(_gMgr->tmpPalette, _gMgr->sepiaPalette, 256 * 3);
 			_gMgr->uploadPalette(_gMgr->mainGamePalette);
+			*/
+			_gMgr->copyPalette(GraphicsManager::PALETTES::MAIN, GraphicsManager::PALETTES::NORMAL);
+			_gMgr->copyPalette(GraphicsManager::PALETTES::SEPIA, GraphicsManager::PALETTES::MAIN);
+			_gMgr->copyPalette(GraphicsManager::PALETTES::SEPIA, GraphicsManager::PALETTES::TMP);
+			_gMgr->uploadPalette(GraphicsManager::PALETTES::MAIN);
 			_gameState.isAlternatePaletteActive = 1;
 		}
 		if (_gameState.currPakNum == 2 && _gameState.currRoomNum == 22 && _gameState.isAlternatePaletteActive == 1) {
-			memcpy(_gMgr->mainGamePalette, _gMgr->normalPalette, 256 * 3);
-			memcpy(_gMgr->tmpPalette, _gMgr->normalPalette, 256 * 3);
-			_gMgr->uploadPalette(_gMgr->mainGamePalette);
+//			memcpy(_gMgr->mainGamePalette, _gMgr->normalPalette, 256 * 3);
+//			memcpy(_gMgr->tmpPalette, _gMgr->normalPalette, 256 * 3);
+//			_gMgr->uploadPalette(_gMgr->mainGamePalette);
+
+			_gMgr->copyPalette(GraphicsManager::PALETTES::NORMAL, GraphicsManager::PALETTES::MAIN);
+			_gMgr->copyPalette(GraphicsManager::PALETTES::NORMAL, GraphicsManager::PALETTES::TMP);
+			_gMgr->uploadPalette(GraphicsManager::PALETTES::MAIN);
 			_gameState.isAlternatePaletteActive = 0;
 		}
 

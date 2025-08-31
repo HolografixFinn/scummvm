@@ -22,6 +22,7 @@
 
 #include"comet/archivesManager.h"
 #include "common/file.h"
+#include "common/ptr.h"
 
 #define COMET_COMPRESSION_7BITS_COMPRESSION_FLAG 0x02
 #define OMET_COMPRESSION_HUFF_COMPRESSED_IMMEDIATES 0x04
@@ -456,9 +457,10 @@ namespace Cometengine {
 		return true;
 
 	}
-	uint8 * ArchivesManager::allocateAndGetFile(const char *archiveName, uint16 fileNum, uint32 *decompSize) {
+	Common::SharedPtr<uint8> ArchivesManager::allocateAndGetFile(const char* archiveName, uint16 fileNum, uint32* decompSize) {
+//		uint8 * ArchivesManager::allocateAndGetFile(const char *archiveName, uint16 fileNum, uint32 *decompSize) {
 		char filename[32];
-		uint8 *destBuffer;
+		// uint8 *destBuffer;
 		Common::File f;
 		uint32 fileOffset;
 		uint32 relocations[100];
@@ -493,22 +495,24 @@ namespace Cometengine {
 		relativeOffsetToData = f.readUint16LE();
 
 		f.seek(relativeOffsetToData, SEEK_CUR);
-		destBuffer = new uint8[decompressedSize + 0x10cc];
+		Common::SharedPtr<uint8> destBuffer(new uint8[decompressedSize + 0x10cc], Common::ArrayDeleter<uint8>());
+//		destBuffer = new uint8[decompressedSize + 0x10cc];
+		//destBuffer.reset(new uint8[decompressedSize + 0x10cc]);
 		if (destBuffer == nullptr) {
-			f.close();
+//			f.close();
 			return nullptr;
 		}
 		if (compressionType == 0) {
-			f.read(destBuffer, compressedSize);
+			f.read(destBuffer.get(), compressedSize);
 		}
 		else if (compressionType == 1) {
-			tmpBuffer = destBuffer + (decompressedSize + 300 - compressedSize);
+			tmpBuffer = destBuffer.get() + (decompressedSize + 300 - compressedSize);
 
 			f.read(tmpBuffer, compressedSize);
-			decompress(compressionFlags, tmpBuffer, destBuffer, decompressedSize);
+			decompress(compressionFlags, tmpBuffer, destBuffer.get(), decompressedSize);
 //			delete[] tmpBuffer;
 		}
-		f.close();
+//		f.close();
 		if (decompSize != nullptr) {
 			*decompSize = decompressedSize;
 		}

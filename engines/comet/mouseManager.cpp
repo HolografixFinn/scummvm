@@ -40,7 +40,7 @@ namespace Cometengine {
 		{
 	}
 	MouseManager::~MouseManager() {
-		delete _cursorGraphics;
+//		delete _cursorGraphics;
 	}
 	bool MouseManager::updateMouseStatus() {
 		_currPos = _evtMgr->getMousePos();
