@@ -27,6 +27,7 @@
 #include "audio/audiostream.h"
 #include "audio/fmopl.h"
 #include "audio/mixer.h"
+#include"common/ptr.h"
 
 namespace Cometengine {
 class CometEngine;
@@ -51,8 +52,11 @@ class CometEngine;
 	private:
 		void timerProc();
 		CometEngine *_vm;
-		uint8 *_musicData;
-		uint8 *_digiSampleData;
+//		uint8 *_musicData;
+//		uint8 *_digiSampleData;
+		::Common::SharedPtr<uint8> _musicData{ new uint8[13000],::Common::ArrayDeleter<uint8>() };
+		::Common::SharedPtr<uint8> _digiSampleData{ new uint8[65000],::Common::ArrayDeleter<uint8>() };
+
 //		uint8 _currentMusicFile;
 		uint8 _currenDigiFile;
 		uint32 _digiDataSize;

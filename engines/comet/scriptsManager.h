@@ -24,7 +24,7 @@
 #define COMET_SCRIPTSMANAGER_H
 #include "comet/comet_structs.h"
 #include "common/scummsys.h"
-
+#include"common/ptr.h"
 namespace Cometengine {
 class CometEngine;
 //class ScriptManager;
@@ -260,8 +260,10 @@ private:
 
 	RoomScript *_currScript;
 	CometEngine *_vm;
-	char *_scriptsBuffer;
-	char *_multiChoiceDialogBuffer;
+//	char *_scriptsBuffer;
+//	char *_multiChoiceDialogBuffer;
+	::Common::SharedPtr<char> _scriptsBuffer{ new char[3000], ::Common::ArrayDeleter<char>() };
+//	::Common::SharedPtr<char> _multiChoiceDialogBuffer{ new char[1000], ::Common::ArrayDeleter<char>() };
 	void prepareScriptsAndInitRoom();
 	void relocateScripts();
 	//			RoomScript _scripts[20];

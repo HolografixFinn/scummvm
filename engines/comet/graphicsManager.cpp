@@ -141,9 +141,11 @@ void GraphicsManager::callCapFPS() {
 
 void GraphicsManager::init() {
 	//	_vm->_system->getTimerManager()->installTimerProc(GraphicsManager::onFrameTimer, 1000000 / TimerRate, this, "FramesTimer");
-	this->_videoBackbuffer = new uint8[_COMET_XRESOLUTION * _COMET_YRESOLUTION];
+//	this->_videoBackbuffer = new uint8[_COMET_XRESOLUTION * _COMET_YRESOLUTION];
+	this->_videoBackbuffer = _videoBackbufferData.get();
 	this->_videoBackbufferSize = _COMET_XRESOLUTION * _COMET_YRESOLUTION;
-	this->_backgroundBuffer = new uint8[(_COMET_XRESOLUTION * _COMET_YRESOLUTION) + 8000];
+//	this->_backgroundBuffer = new uint8[(_COMET_XRESOLUTION * _COMET_YRESOLUTION) + 8000];
+	this->_backgroundBuffer = _backgroundBufferData.get();
 	_tmpBuffer = _backgroundBuffer + (_COMET_XRESOLUTION * _COMET_YRESOLUTION);
 	uint32 offset = 0;
 	for (uint32 i = 0; i < _COMET_YRESOLUTION; i++) {
@@ -154,8 +156,8 @@ void GraphicsManager::init() {
 }
 void GraphicsManager::uninit() {
 	_vm->_system->getTimerManager()->removeTimerProc(GraphicsManager::onFrameTimer);
-	delete[] this->_videoBackbuffer;
-	delete[] this->_backgroundBuffer;
+//	delete[] this->_videoBackbuffer;
+//	delete[] this->_backgroundBuffer;
 //	delete[] this->normalPalette;
 //	delete[] this->tmpPalette;
 	if (_vm->isCD()) {

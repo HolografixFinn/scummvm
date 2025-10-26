@@ -23,7 +23,7 @@
 #ifndef COMET_TEXTMANAGER_H
 #define COMET_TEXTMANAGER_H
 #include "common/scummsys.h"
-
+#include"common/ptr.h"
 
 namespace Cometengine {
 class CometEngine;
@@ -99,8 +99,12 @@ class CometEngine;
 		int16 _prevFixedFrame;
 		int8 _speakingActor;
 		CometEngine *_vm;
+		/*
 		char *_systemMessages;
 		char *_objectsName;
+		*/
+		::Common::SharedPtr<char> _systemMessages{ new char[1000] , ::Common::ArrayDeleter<char>() };
+		::Common::SharedPtr<char> _objectsName{ new char[3000] , ::Common::ArrayDeleter<char>() };
 		//uint8 _currentLangId;
 		char _textFilename[11];
 		char _langsFirstChars[5];
@@ -117,7 +121,9 @@ class CometEngine;
 		uint8 _interCharsWidth;
 		uint8 _currStringColor;
 		uint16 _stringXPos;
-		char *_multiChoiceText;
+//		char *_multiChoiceText;
+		::Common::SharedPtr<char> _multiChoiceText{ new char[1000] , ::Common::ArrayDeleter<char>() };
+
 		bool _isTextDisplayed;
 		uint8 _sentenceColor;
 		uint16 _currSentenceIdx;

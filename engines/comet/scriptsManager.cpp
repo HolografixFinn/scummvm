@@ -24,7 +24,8 @@
 #include "comet/comet.h"
 
 namespace Cometengine {
-ScriptsManager::ScriptsManager(CometEngine *vm) : _vm(vm), _scriptsBuffer(nullptr), _multiChoiceDialogBuffer(nullptr),
+ScriptsManager::ScriptsManager(CometEngine *vm) : _vm(vm),
+												// _scriptsBuffer(nullptr), _multiChoiceDialogBuffer(nullptr),
 												  //_scripts(),
 												  //_scriptsInRoom(0),
 												  _resourceType(0), _currScript(nullptr) //,_mustReturn(false)
@@ -32,6 +33,7 @@ ScriptsManager::ScriptsManager(CometEngine *vm) : _vm(vm), _scriptsBuffer(nullpt
 	_opTable = shadowTable;
 }
 ScriptsManager::~ScriptsManager() {
+	/*
 	if (_scriptsBuffer != nullptr) {
 		delete[] _scriptsBuffer;
 		_scriptsBuffer = nullptr;
@@ -40,14 +42,15 @@ ScriptsManager::~ScriptsManager() {
 		delete[] _multiChoiceDialogBuffer;
 		_multiChoiceDialogBuffer = nullptr;
 	}
+	*/
 }
 void ScriptsManager::initResources() {
 	//ok
-	_scriptsBuffer = new char[3000];
-	_multiChoiceDialogBuffer = new char[1000];
+//	_scriptsBuffer = new char[3000];
+//	_multiChoiceDialogBuffer = new char[1000];
 }
 void ScriptsManager::loadAndPrepareRoomScripts(char *filename, uint8 roomIdx, bool isLoading) {
-	_vm->_archMgr->readFileBlock(filename, roomIdx, _scriptsBuffer, 3000);
+	_vm->_archMgr->readFileBlock(filename, roomIdx, _scriptsBuffer.get(), 3000);
 	fixScriptsBugs(_vm->_gameState.currPakNum, roomIdx);
 	if (!isLoading) {
 		prepareScriptsAndInitRoom();
@@ -57,15 +60,15 @@ void ScriptsManager::loadAndPrepareRoomScripts(char *filename, uint8 roomIdx, bo
 }
 void ScriptsManager::fixScriptsBugs(int16 pak, uint8 room) {
 	// fixes for some game-breaking bugs in the scripts
-	if (pak == 6 && room == 8) {
-		_scriptsBuffer[0x13c7 - 0xf22] = 0x22;
-		_scriptsBuffer[0x13f6 - 0xf22] = 0x22;
+	if (pak == 6 && room == 8 && (!_vm->isCD())) {
+		_scriptsBuffer.get()[0x13c7 - 0xf22] = 0x22;
+		_scriptsBuffer.get()[0x13f6 - 0xf22] = 0x22;
 	}
 }
 
 void ScriptsManager::prepareScriptsAndInitRoom() {
 	_vm->_gmMgr->resetHotspotsAndOtherValues();
-	_vm->_gameState.numScriptsInRoom = READ_LE_INT16(_scriptsBuffer) / 2;
+	_vm->_gameState.numScriptsInRoom = READ_LE_INT16(_scriptsBuffer.get()) / 2;
 	for (uint8 i = 0; i < _vm->_gameState.numScriptsInRoom; i++) {
 		initRoomScript(i);
 	}
@@ -74,7 +77,7 @@ void ScriptsManager::prepareScriptsAndInitRoom() {
 	executeScript(0);
 }
 void ScriptsManager::initRoomScript(uint8 idx) {
-	char *data = _scriptsBuffer;
+	char *data = _scriptsBuffer.get();
 	uint16 offset = READ_LE_UINT16(data + (idx * 2));
 	data = data + offset;
 	RoomScript *script = &_vm->_gameState.scripts[idx];
@@ -1150,8 +1153,8 @@ int16 ScriptsManager::readWordParameter(const char *&script) {
 	*/
 void ScriptsManager::relocateScripts() {
 	for (uint8 i = 0; i < _vm->_gameState.numScriptsInRoom; i++) {
-		uint16 offset = READ_LE_UINT16(_scriptsBuffer + (i * 2));
-		char *data = _scriptsBuffer + offset;
+		uint16 offset = READ_LE_UINT16(_scriptsBuffer.get() + (i * 2));
+		char *data = _scriptsBuffer.get() + offset;
 		_vm->_gameState.scripts[i].current = data + (_vm->_gameState.scripts[i].current - _vm->_gameState.scripts[i].start);
 		_vm->_gameState.scripts[i].start = data;
 	}
