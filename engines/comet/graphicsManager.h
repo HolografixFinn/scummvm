@@ -23,6 +23,7 @@
 #ifndef COMET_GRAPHICSMANAGER_H
 #define COMET_GRAPHICSMANAGER_H
 #include "common/mutex.h"
+#include "common/ptr.h"
 #include "common/scummsys.h"
 #include "common/system.h"
 #include "common/ptr.h"
@@ -100,7 +101,11 @@ public:
 
 	//
 	void copyVideoBuffer(uint8 *src, uint8 *dst);
-	uint8 *_videoBackbuffer;
+
+	::Common::SharedPtr<uint8> _videoBackbufferData{ new uint8[_COMET_XRESOLUTION * _COMET_YRESOLUTION], ::Common::ArrayDeleter<uint8>() };
+	uint8* _videoBackbuffer;
+
+	::Common::SharedPtr<uint8> _backgroundBufferData{ new uint8[(_COMET_XRESOLUTION * _COMET_YRESOLUTION) + 8000], ::Common::ArrayDeleter<uint8>() };
 	uint8 *_backgroundBuffer;
 	void addStageElementsToDisplayList();
 	uint8 *getAnimData(uint8 animationIdx, uint8 *resourceData);

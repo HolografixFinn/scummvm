@@ -22,6 +22,7 @@
 
 #ifndef COMET_GAMEMANAGER_H
 #define COMET_GAMEMANAGER_H
+#include<common/ptr.h>
 #include "common/array.h"
 #include "common/events.h"
 #include "common/file.h"
@@ -129,7 +130,8 @@ public:
 
 	static const uint32 kVolatileKey = 0x1000;
 
-	char *_tempBuffer;
+	//char *_tempBuffer;
+	//::Common::SharedPtr<uint8> _tempBuffer{new uint8[8000], ::Common::ArrayDeleter<uint8>() }; 
 
 	//			Actor _actors[11];
 	Actor *_mainActor;
@@ -296,7 +298,7 @@ private:
 	void resetDefaultKeyFlags();
 	void initAllResources();
 
-	uint8 *_resPakData;
+//	uint8 *_resPakData;
 
 //	uint8 *_fontData;
 	//			uint16 _movementMask;

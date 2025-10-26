@@ -42,7 +42,8 @@ namespace Cometengine {
 GameManager::GameManager(CometEngine *vm) : _vm(vm), handleQuit(nullptr),
 											_movementStatus(0), _movementStatus2(0), _lastPressedKey(Common::KeyCode::KEYCODE_INVALID), _mouseButtons(0), _specialKeys(0),
 											_evtMgr(vm->_system->getEventManager()), _keysFlags(),
-											_resPakData(nullptr), //_fontData(nullptr),
+											//_resPakData(nullptr), //_fontData(nullptr),
+	
 											_rnd("comet"),
 											_mainActor(0), _NPCActors(0),
 											_topWalkAreaLineStrip(),
@@ -156,18 +157,22 @@ GameManager::GameManager(CometEngine *vm) : _vm(vm), handleQuit(nullptr),
 	memset(_saveFilesDescription, 0, 10 * 30);
 }
 GameManager::~GameManager() {
+	/*
 	if (_resPakData != nullptr) {
 		delete[] _resPakData;
 		_resPakData = nullptr;
 	}
+	*/
+	/*
 	if (_tempBuffer != nullptr) {
 		delete[] _tempBuffer;
 		_tempBuffer = nullptr;
 	}
+	*/
 }
 void GameManager::init() {
 	this->resetDefaultKeyFlags();
-	this->_tempBuffer = new char[8000];
+//	this->_tempBuffer.reset(new uint8[8000]);
 }
 void GameManager::resetDefaultKeyFlags() {
 	//this initialization is just horrible, but right now I don't find any other way that works for c++98 and custom Array type

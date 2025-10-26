@@ -25,10 +25,11 @@
 
 namespace Cometengine {
 TextManager::TextManager(CometEngine *vm) :                                                                                                                                //, uint8 langId) :
-											_vm(vm), _systemMessages(nullptr), _objectsName(nullptr), _langsFirstChars(), _textFilename("T.CC4"), _isTextDisplayed(false), //_currentLangId(langId),
+											_vm(vm), //_systemMessages(nullptr), 	//_objectsName(nullptr),
+	_langsFirstChars(), _textFilename("T.CC4"), _isTextDisplayed(false), //_currentLangId(langId),
 											_fontData(nullptr), _charsGraphics(nullptr), _charsData(nullptr), _spaceCharWidth(2), _interCharsWidth(1), _currStringColor(0),
 											_charsHeight(0), _fontSheetWidth(0), _stringXPos(0), _choice(0), _prevAnimationOrActor(-1), _prevFixedFrame(0), _prevFrameToDraw(0), _speakingActor(0),
-											_multiChoiceText(nullptr),
+											//_multiChoiceText(nullptr),
 											_sentenceColor(0), _currSentenceIdx(0), _textOnScreenRemainingFrames(0), _textOnScreenDuration(0), _currString(nullptr), _maxStringHalfWidth(0), _isMoreThan3Lines(false), _textLinesHeight(0),
 											_nextString(nullptr),
 											// _textDurationScale(0), //_textBlock(0),
@@ -58,6 +59,7 @@ TextManager::TextManager(CometEngine *vm) :                                     
 	// { 'E',0,0,0,'I',0,0 };
 }
 TextManager::~TextManager() {
+	/*
 	if (_systemMessages != nullptr) {
 		delete[] _systemMessages;
 		_systemMessages = nullptr;
@@ -66,16 +68,18 @@ TextManager::~TextManager() {
 		delete[] _objectsName;
 		_objectsName = nullptr;
 	}
+	
 	if (_multiChoiceText != nullptr) {
 		delete[] _multiChoiceText;
 		_multiChoiceText = nullptr;
 	}
+	*/
 }
 void TextManager::initResources() {
 	//ok
-	_systemMessages = new char[1000];
-	_objectsName = new char[3000];
-	_multiChoiceText = new char[1000];
+//	_systemMessages = new char[1000];
+//	_objectsName = new char[3000];
+//	_multiChoiceText = new char[1000];
 }
 
 void TextManager::loadSystemAndObjects() {
@@ -86,8 +90,8 @@ void TextManager::loadSystemAndObjects() {
 	}
 	_isTextDisplayed = false;
 	_textFilename[0] = _langsFirstChars[_vm->_gameState.selectedLanguageID];
-	decodeFromFile(_systemMessages, 0, 1000);
-	decodeFromFile(_objectsName, 1, 3000);
+	decodeFromFile(_systemMessages.get(), 0, 1000);
+	decodeFromFile(_objectsName.get(), 1, 3000);
 }
 void TextManager::decodeFromFile(char *buffer, uint8 blockIdx, uint32 bufferSize) {
 	this->_vm->_archMgr->readFileBlock(_textFilename, blockIdx, buffer, bufferSize);
@@ -258,14 +262,14 @@ uint8 TextManager::getSentence(uint8 block, uint16 sentenceIdx, char *buffer) {
 void TextManager::actorSaySentence(uint8 actorIdx, uint16 sentenceIdx, uint8 color) {
 	_speakingActor = actorIdx;
 	_currSentenceIdx = sentenceIdx;
-	WRITE_LE_UINT32(_multiChoiceText, 4);
-	getSentence(_vm->_gameState.textChapterID + 3, _currSentenceIdx, _multiChoiceText + 4);
+	WRITE_LE_UINT32(_multiChoiceText.get(), 4);
+	getSentence(_vm->_gameState.textChapterID + 3, _currSentenceIdx, _multiChoiceText.get() + 4);
 	if (!_vm->isCD() || _vm->_gameState.speechOptions == 0) {
-		prepareString(getSentencePtr(0, _multiChoiceText));
+		prepareString(getSentencePtr(0, _multiChoiceText.get()));
 	} else if (_vm->_gameState.speechOptions == 2) {
 		_vm->_spMgr->startSpeech(_currSentenceIdx);
 	} else if (_vm->_gameState.speechOptions == 1) {
-		prepareString(getSentencePtr(0, _multiChoiceText));
+		prepareString(getSentencePtr(0, _multiChoiceText.get()));
 		_vm->_spMgr->startSpeech(_currSentenceIdx);
 	}
 	_isTextDisplayed = true;
@@ -576,7 +580,7 @@ bool TextManager::printDigit(uint16 &val, uint16 division, char *&ptr, bool isPr
 
 //for encapsulation
 const char *TextManager::getObjNames() {
-	return _objectsName;
+	return _objectsName.get();
 }
 /*
 	const char *TextManager::sysMessages() {
@@ -584,7 +588,7 @@ const char *TextManager::getObjNames() {
 	}
 	*/
 char *TextManager::getMultiChoiceText() {
-	return _multiChoiceText;
+	return _multiChoiceText.get();
 }
 bool TextManager::isTextDisplayed() {
 	return _isTextDisplayed;
@@ -642,7 +646,7 @@ void TextManager::setTextRemainingFrame(uint16 v) {
 	_textOnScreenRemainingFrames = v;
 }
 const char *TextManager::getSysMessages() {
-	return _systemMessages;
+	return _systemMessages.get();
 }
 void TextManager::setChoice(uint16 choiceIdx) {
 	_choice = choiceIdx;
