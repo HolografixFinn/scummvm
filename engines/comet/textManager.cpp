@@ -413,7 +413,7 @@ void TextManager::drawMultiChoice() {
 			color3 = color;
 		}
 		if (!_vm->isCD()) {
-			if (_multiChoiceIntroSentence != 0xffff) {
+			if (_multiChoiceIntroSentence != -1) {
 				prepareString(_multiChoiceIntroSentencePtr);
 				_vm->_gMgr->drawSpeechBox(x - _textPadding, y - _textPadding, x + _textPadding + (_maxStringHalfWidth * 2), y + _textLinesHeight);
 				y = printStringLines(_multiChoiceIntroSentencePtr, x, y, color, true); //ultimo parametro era -1 invec di true
