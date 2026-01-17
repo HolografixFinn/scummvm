@@ -63,6 +63,7 @@ CometEngine::CometEngine(OSystem *syst, const CometGameDescription *gameDesc) : 
 	}
 	if (_isCDVersion) {
 		_gameState.speechOptions = 1;
+		_gameState.targetFPS = 8;
 	}
 	if (scumm_strnicmp(_gameDescription->desc.gameId, "comet", 5) == 0) {
 		_isComet = true;
@@ -181,10 +182,20 @@ bool CometEngine::isQuitRequested() {
 Common::Error CometEngine::run() {
 	_console = new Console();
 	setDebugger(_console);
-	if (_system->hasFeature(OSystem::Feature::kFeatureVSync)) {
+	if (_system->hasFeature(OSystem::Feature::kFeatureVSync) && false) {
 		_system->beginGFXTransaction();
 		_system->setFeatureState(OSystem::Feature::kFeatureVSync, true);
 		OSystem::TransactionError err = _system->endGFXTransaction();
+		//lock/unlock is to force dirty flag-> full repaint
+		_system->lockScreen();
+		_system->unlockScreen();
+		_system->updateScreen();
+		auto mst = _system->getMillis();
+		_system->lockScreen();
+		_system->unlockScreen();
+		_system->updateScreen();
+		auto millidiff = _system->getMillis() - mst;
+		_console->debugPrintf("vsync avg fps %f", 1000.0f / millidiff);
 	}
 	initManagers();
 	uint16_t skullPuzzleVarIdx = 0x9d;

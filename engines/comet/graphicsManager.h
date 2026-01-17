@@ -255,14 +255,6 @@ private:
 	void drawSingleLightning(uint16 startX, uint16 startY, uint16 maxX, uint16 maxY);
 	void drawLightnings();
 	//
-	// for my capped framerate
-	uint32 _hfLast;
-	uint32 _hfMaxFps;
-	uint32 _hfInterval;
-	uint32 _hfFrames;
-	uint32 _hfLastSecond;
-	uint32 _hfFps;
-	//
 	void drawRoomZoomed(int16 centerx, int16 centery);
 	void drawRoomZoomed_x3(int16 centerx, int16 centery);
 	void drawRoomZoomed_x4(int16 centerx, int16 centery);
@@ -270,12 +262,16 @@ private:
 	Common::Mutex _mutex;
 	typedef void (*mouseCallback)();
 	void onFrame();
-	uint32 _lastFrame;
+	uint32 _lastFrame=0;
+	uint32 _nextFrame=0;
+	float _nextFrameDouble = 0.0f;
+	const float _frameDuration = 1000.0f / 60.0f;
 	uint32 _currFPS;
 	//			uint32 _desiredFPS;
 	uint32 _prevFPS;
 	uint32 _framesToWait;
 	uint32 _verticalRetraceCount;
+	uint32 _cdVCount = 0;
 	void capFPS_floppy();
 	void (GraphicsManager::*capFPS)();
 	uint32 _FPS;

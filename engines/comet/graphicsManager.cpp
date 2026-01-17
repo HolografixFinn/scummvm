@@ -92,45 +92,25 @@ GraphicsManager::GraphicsManager(CometEngine *vm) : _vm(vm), _currFPS(0), _FPS(0
 
 //, _isAlternatePaletteActive(0)
 {
-	_hfLast = _vm->_system->getMillis();
-	_hfMaxFps = 50;
-	_hfInterval = 1000 / _hfMaxFps;
-	_hfFrames = 0;
-	_hfLastSecond = _hfLast;
-	_hfFps = 0;
+	_nextFrameDouble += _frameDuration;
+	_nextFrame = _vm->_system->getMillis() + int(_nextFrameDouble);
+	_nextFrameDouble -= int(_nextFrameDouble);
+	_vm->addTimedProc(new Common::Functor0Mem<void, GraphicsManager>(this, &GraphicsManager::onFrame));
 	if (!_vm->isCD()) {
-		//		_hfMaxFps = 50;
 		capFPS = &GraphicsManager::capFPS_floppy;
-		_vm->addTimedProc(new Common::Functor0Mem<void, GraphicsManager>(this, &GraphicsManager::onFrame));
 	} else {
-		_hfMaxFps = 35;
-		_hfInterval = 1000 / _hfMaxFps;
 		capFPS = &GraphicsManager::capFPS_CD;
 		_vm->addTimedProc(new Common::Functor0Mem<void, GraphicsManager>(this, &GraphicsManager::capFPS_CD_timerProc));
 	}
 }
 void GraphicsManager::_hfCappedUpdate(bool incFPS) {
-	//	int32 minInterval = _currFPS > 19 ? 20 : 0;
-	int32 t = _hfInterval - (_vm->_system->getMillis() - _hfLast);
-	if (t > 0) {
-		//		_vm->_system->delayMillis(MAX(t, minInterval));
-		_vm->_system->delayMillis(t);
-	}
-	//	_hfLast += _hfInterval;
-	_hfLast = _vm->_system->getMillis();
+
+//	_vm->_system->lockScreen();
+//	_vm->_system->unlockScreen();
+
+	this->waitVRetrace();
 	_vm->_system->updateScreen();
-	_hfFrames++;
-	//	if (incFPS) {
-	//		this->_currFPS++;
-	//	}
-	if (_hfLast - _hfLastSecond > 1000) {
-		_hfFps = _hfFrames;
-		_hfFrames = 0;
-		_hfLastSecond = _hfLast;
-		//		char strr[256];
-		//		snprintf(strr, 256, "HF %d fps", _hfFps);
-		//		debug(strr);
-	}
+	return;
 }
 GraphicsManager::~GraphicsManager() {
 	uninit();
@@ -177,67 +157,45 @@ void GraphicsManager::onFrameTimer(void *ref) {
 	gm->onFrame();
 }
 void GraphicsManager::onFrame() {
-	{
+		//generic version
+		uint32 _currentMillis = _vm->_system->getMillis();
 		Common::StackLock lock(_mutex);
-		uint32 curr = _vm->_system->getMillis();
-		int32 diff = (1000 / TimerRate) - (curr - _lastFrame);
-		if (diff > 0) {
-			//			debug("Accelerato %d", diff);
-			//			_vm->_system->delayMillis(diff);
-			curr = _vm->_system->getMillis();
+		if (_lastFrame == 0) {
+			_lastFrame = _currentMillis;
 		}
-		_lastFrame = curr;
-		//		debug("Timer %d", _lastFrame);
+		else {
+			_lastFrame = _nextFrame;
+		}
+		uint32 delay = _currentMillis - _lastFrame;
+		_nextFrameDouble += _frameDuration;
+		_nextFrame += int(_nextFrameDouble);
+		_nextFrameDouble -= int(_nextFrameDouble);
+
+		int aba = 0;
 		_verticalRetraceCount++;
-		if (_verticalRetraceCount == TimerRate) {
+		if (_verticalRetraceCount >= 60) {
 			_verticalRetraceCount = 0;
 			_FPS = _currFPS;
 			_currFPS = 0;
-			//			warning("Second Elapsed");
 		}
-	}
+		return;
+	
 }
 void GraphicsManager::waitVRetrace() {
-	_hfCappedUpdate(false);
-	return;
-	//		_vm->_system->delayMillis(16);
-	//		return;
-	//	char warningString[256];
-	//	uint32 next = 0;
-	uint32 check = 0;
-	//	uint32 curr = _vm->_system->getMillis();
-	uint32 last = 0;
-	//	uint32 frm = 1000 / TimerRate;
-	//raw and probably unstable
-	if (invretrace) {
-		debug("Vretrace internal call");
-	}
-	invretrace = true;
+	uint32 now = _vm->_system->getMillis();
+	uint32 next = 0;
 	{
 		Common::StackLock lock(_mutex);
-		last = _lastFrame;
-		//		buff = (curr / frm) * frm;
+		next = _nextFrame;
 	}
-	uint32 now = _vm->_system->getMillis();
-	int32 t = (1000 / TimerRate) - (now - last);
-	//	debug("pre %d -> %d = %d", last, now, t);
-	if (t > 0) {
-		_vm->_system->delayMillis(t + 2);
+	if (now > next) {
+		_vm->_system->delayMillis(this->_frameDuration);
+		return;
 	}
-	//	debug("post %0d", _vm->_system->getMillis());
-	invretrace = false;
-	/*
-	while (true) {
-		{
-			Common::StackLock lock(_mutex);
-			check = _lastFrame;
-		}
-		if (check != last) {
-			break;
-		}
-		_vm->_system->delayMillis(1);
+	if (now < next) {
+		_vm->_system->delayMillis(next - now);
 	}
-	*/
+	return;
 }
 void GraphicsManager::resetFullscreenViewport() {
 	setDrawArea(0, 0, 319, 199);
@@ -253,10 +211,11 @@ void GraphicsManager::paintBackbuffer_mouse() {
 		this->_prePaintMouseCallback();
 	}
 	//TODO: the following part with retrace probably needs to be recoded to consider the eventual vsync of the backend
-	this->waitVRetrace();
+//	this->waitVRetrace();
 	this->_vm->_system->copyRectToScreen(this->_videoBackbuffer, _COMET_XRESOLUTION, 0, 0, _COMET_XRESOLUTION, _COMET_YRESOLUTION);
-	//	this->_vm->_system->updateScreen();
 	this->_hfCappedUpdate();
+	
+//	this->_hfCappedUpdate();
 
 	if (this->_postPaintMouseCallback != nullptr) {
 		this->_postPaintMouseCallback();
@@ -266,7 +225,7 @@ void GraphicsManager::paintBackbuffer_mouse() {
 }
 void GraphicsManager::paintBackbuffer() {
 	//TODO: the following part with retrace probably needs to be recoded to consider the eventual vsync of the backend
-	this->waitVRetrace();
+//	this->waitVRetrace();
 	this->_vm->_system->copyRectToScreen(this->_videoBackbuffer, _COMET_XRESOLUTION, 0, 0, _COMET_XRESOLUTION, _COMET_YRESOLUTION);
 	//	this->_vm->_system->updateScreen();
 	this->_hfCappedUpdate();
@@ -3111,13 +3070,11 @@ void GraphicsManager::tintPalette(const uint8 *palette, uint8 *destPalette, uint
 void GraphicsManager::capFPS_CD() {
 	uint8 check = 35 / (_vm->_gameState.targetFPS + 8);
 	uint32 vcount = 0;
-	char str[256];
-	//	snprintf(str, 256, "REQ %02x -> CHK %02X\n", _vm->_gameState.targetFPS, check);
-	//	debug(str);
+//	_vm->getDebugger()->debugPrintf("targetFPS: %d, check=%d\n", _vm->_gameState.targetFPS, check);
 	while (true) {
 		{
 			Common::StackLock l(_mutex);
-			vcount = _verticalRetraceCount;
+			vcount = _cdVCount;
 		}
 		//		snprintf(str, 256, "vc %02x\n", vcount);
 		//		debug(str);
@@ -3129,12 +3086,12 @@ void GraphicsManager::capFPS_CD() {
 	}
 	{
 		Common::StackLock l(_mutex);
-		_verticalRetraceCount = 0;
+		_cdVCount = 0;
 	}
 }
 void GraphicsManager::capFPS_CD_timerProc() {
 	Common::StackLock lock(_mutex);
-	_verticalRetraceCount++;
+	_cdVCount++;
 }
 
 void GraphicsManager::capFPS_floppy() {
@@ -3145,10 +3102,10 @@ void GraphicsManager::capFPS_floppy() {
 		FPS = _FPS;
 	}
 	if (abs((long)(FPS - _vm->_gameState.targetFPS)) > 1) {
-		if (FPS != _prevFPS) {
+		if (FPS != _prevFPS ) {
 			_prevFPS = FPS;
 			if (FPS < _vm->_gameState.targetFPS) {
-				if (_framesToWait > 1) { // limiting it to 1 instead of 0 to regulate speed peaks
+				if (_framesToWait > 0) { 
 					_framesToWait--;
 				}
 			} else {
@@ -3241,9 +3198,9 @@ void GraphicsManager::drawFrameToScreen() {
 			_vm->_moMgr->setMouseVisibility(true);
 		}
 	}
-	if (_vm->isCD()) {
+//	if (!_vm->isCD()) {
 		callCapFPS();
-	}
+//	}
 	if (_fadeStatus == 1) {
 		if (_vm->isCD()) {
 			_vm->_moMgr->setMouseVisibility(false);

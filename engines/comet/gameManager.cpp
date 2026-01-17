@@ -553,9 +553,9 @@ void GameManager::showLoopedAnimation(uint8 subfile, uint8 anim, int16 frame_fla
 		for (currFrame = 0; currFrame < numFrames; currFrame++) {
 			_vm->_gMgr->copyVideoBuffer(_vm->_gMgr->_backgroundBuffer, _vm->_gMgr->_videoBackbuffer);
 			lastMerge = _vm->_gMgr->drawAnimationFrame(subfileData, animData, currFrame, lastMerge, 0, 0, numFrames);
-			if (_vm->isCD()) {
+//			if (_vm->isCD()) {
 				_vm->_gMgr->callCapFPS();
-			}
+//			}
 			_vm->_txtMgr->handleOnScreenText();
 			if (hasPalette == 1) {
 				hasPalette = 2;
