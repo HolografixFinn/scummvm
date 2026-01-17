@@ -3337,11 +3337,11 @@ uint8 GameManager::handleSaveFilenameTyping(::Common::KeyCode key, uint8 selecte
 		_vm->_gmMgr->updateFontDataAndColor(0x77);
 		_vm->_txtMgr->drawString(x1 + xOffs, yOffs + (height * selectedItem), _vm->_gMgr->getBackbuffer(), _saveFilesDescription[selectedItem]);
 		_vm->_gMgr->paintBackbuffer_mouse();
-		if (key == Common::KeyCode::KEYCODE_RETURN || key == Common::KeyCode::KEYCODE_KP_ENTER || _mouseButtons==2) {
+		if (key == Common::KeyCode::KEYCODE_RETURN || key == Common::KeyCode::KEYCODE_KP_ENTER || (_vm->isCD() && _mouseButtons==2)) {
 			_saveFilesDescription[selectedItem][numChars] = 0;
 			retVal = 1;
 		}
-		if (key == Common::KeyCode::KEYCODE_ESCAPE || _mouseButtons==1) {
+		if (key == Common::KeyCode::KEYCODE_ESCAPE || (_vm->isCD() && _mouseButtons==1)) {
 			memcpy(_saveFilesDescription[selectedItem], prevDescription, 30);
 			retVal = 2;
 		}
@@ -3350,10 +3350,20 @@ uint8 GameManager::handleSaveFilenameTyping(::Common::KeyCode key, uint8 selecte
 			_saveFilesDescription[selectedItem][numChars] = 0;
 			waitForNoInput();
 		}
-		if ((_movementStatus & kConfirm) && _vm->_txtMgr->calcStringWidth(_saveFilesDescription[selectedItem]) < 130) {
-			_saveFilesDescription[selectedItem][numChars++] = ' ';
-			_saveFilesDescription[selectedItem][numChars] = 0;
-			waitForNoInput();
+		if (!_vm->isCD()) {
+			if ((_movementStatus & kConfirm) && _vm->_txtMgr->calcStringWidth(_saveFilesDescription[selectedItem]) < 130) {
+				_saveFilesDescription[selectedItem][numChars++] = ' ';
+				_saveFilesDescription[selectedItem][numChars] = 0;
+				waitForNoInput();
+			}
+		}
+		else {
+			if ((key == Common::KeyCode::KEYCODE_SPACE) && _vm->_txtMgr->calcStringWidth(_saveFilesDescription[selectedItem]) < 130) {
+				_saveFilesDescription[selectedItem][numChars++] = ' ';
+				_saveFilesDescription[selectedItem][numChars] = 0;
+				waitForNoInput();
+			}
+
 		}
 		for (uint8 i = 0; i < 36; i++) {
 			if (key == _allowedKeys[i] && numChars < 29 && _vm->_txtMgr->calcStringWidth(_saveFilesDescription[selectedItem]) < 128) {
