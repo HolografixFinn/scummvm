@@ -193,7 +193,8 @@ void GraphicsManager::waitVRetrace() {
 		return;
 	}
 	if (now < next) {
-		_vm->_system->delayMillis(next - now);
+//		_vm->_system->delayMillis(next - now);
+		_vm->_system->delayMillis(this->_frameDuration);
 	}
 	return;
 }
