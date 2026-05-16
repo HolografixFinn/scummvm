@@ -2701,6 +2701,7 @@ uint8 GameManager::chooseObject() {
 				status = 2;
 				break;
 			}
+			operation = Common::KEYCODE_INVALID;
 			if (_vm->isCD()) {
 				uint16 numTargets = (objCount - firstVisibleIdx) >= 10 ? 10 : objCount - firstVisibleIdx;
 				mouseTarget = _vm->_moMgr->getCurrentTarget(MouseManager::Targets::OBJSMENU, numTargets, -1);
