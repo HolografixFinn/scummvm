@@ -64,6 +64,17 @@ void ScriptsManager::fixScriptsBugs(int16 pak, uint8 room) {
 		_scriptsBuffer.get()[0x13c7 - 0xf22] = 0x22;
 		_scriptsBuffer.get()[0x13f6 - 0xf22] = 0x22;
 	}
+	if (pak == 0 && room == 40 && (!_vm->isCD())) {
+		char* script = _scriptsBuffer.get();
+		// get subproc 3
+		uint16_t sub3off = READ_LE_UINT16(script + (3 * 2));
+//		script[sub3off + 5] = 310/2;
+//		script[sub3off + 6] = 234;
+		script[sub3off + 10] = 0x87;
+		script[sub3off + 11] = 0xa3;
+
+	}
+
 }
 
 void ScriptsManager::prepareScriptsAndInitRoom() {
